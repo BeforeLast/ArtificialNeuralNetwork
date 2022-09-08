@@ -1,0 +1,2 @@
+cats image(s): 20
+dogs image(s): 20

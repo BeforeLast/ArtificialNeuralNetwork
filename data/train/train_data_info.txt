@@ -1,0 +1,2 @@
+cats image(s): 0
+dogs image(s): 0

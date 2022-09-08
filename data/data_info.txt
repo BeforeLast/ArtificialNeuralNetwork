@@ -1,0 +1,5 @@
+total cats image(s) : 20
+total dogs image(s) : 20
+data format         : jpg
+color depth         : 24 bits RGB
+shape               : varying
