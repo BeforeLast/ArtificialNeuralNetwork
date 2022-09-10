@@ -2,7 +2,7 @@
 
 from typing import Union
 from classes.layers.Layer import Layer as BaseLayer
-from classes.misc.Function import conv2d_fpack
+from classes.misc.Function import conv2d_fpack, misc
 import numpy as np
 
 class Conv2D(BaseLayer):
@@ -126,7 +126,7 @@ tuple/list of two integers")
             if pool_stride < 1:
                 raise ValueError("Stride value must be an integer equal or \
 greater than one")
-            self.conv_stride = (pool_stride, pool_stride)
+            self.pool_stride = (pool_stride, pool_stride)
         elif (type(pool_stride) is tuple           \
                 or type(pool_stride) is list)      \
                 and len(pool_stride) == 2          \
@@ -144,6 +144,7 @@ of two integers")
             raise ValueError("Invalid activation parameter type")
         elif pool_mode.lower() not in ["max", "maximum", "average", "avg"]:
             raise ValueError("Activation function not supported")
+        self.pool_mode = pool_mode.lower()
         
         ## Misc configuration
         self.name = kwargs.get("name", "Conv2D")
@@ -184,17 +185,59 @@ of two integers")
         """
         Detect the given input using activation function
         """
-        feature_map_result = []
+        # Detetor process
+        detector_result = []
         for feature_map in input:
-            feature_map_result.append(conv2d_fpack['relu'](feature_map))
-        return feature_map_result
+            detector_result.append(conv2d_fpack['relu'](feature_map))
+        return detector_result
         
 
     def pool(self, input):
         """
         Pool the given input using the layer pool method
         """
-        pass
+        
+        ## DEBUGGING PURPOSE ##
+        # See expected pool output shape
+        pool_input_shape = input[0].shape
+        pool_output_shape = (
+            misc['expected_output_dim_length'](
+                pool_input_shape[0], self.pool_kernel_size[0],
+                0, self.pool_stride[0]),
+            misc['expected_output_dim_length'](
+                pool_input_shape[1], self.pool_kernel_size[1],
+                0, self.pool_stride[1]) 
+        )
+        ##
+
+        # Setting pooling mode
+        pool_mode_function = None
+        if self.pool_mode in ["max", "maximum"]:
+            pool_mode_function = np.max
+        elif self.pool_mode in ["avg", "average"]:
+            pool_mode_function = np.average
+        
+        # Pooling process
+        pool_result = []
+        for detector in input:
+            temp = []
+            for y in range(0, len(detector), self.pool_stride[0]):
+                temp_row = []
+                for x in range(0, len(detector[0]), self.pool_stride[1]):
+                    receptive_field = detector[
+                        y:y+self.pool_kernel_size[0],
+                        x:x+self.pool_kernel_size[1]]
+                    if receptive_field.shape != self.pool_kernel_size:
+                        # continue if receptive field does not have shape of
+                        # pool's kernel size
+                        continue
+                    temp_row.append(pool_mode_function(receptive_field))
+                if len(temp_row) > 0:
+                    # skip pool result for the row if the row is empty due to
+                    # the difference in size of receptive field and kernel
+                    temp.append(temp_row)
+            pool_result.append(np.array(temp))
+        return pool_result
 
 if __name__ == "__main__":
     # TEST
@@ -222,3 +265,21 @@ if __name__ == "__main__":
     print(test_detector_array)
     print()
     print(test_detector.detect(test_detector_array))
+    ## Pooling
+    test_pool_1 = Conv2D(
+        1, (2,2),
+        pool_kernel_size=(2,2),
+        pool_stride=(1,1),
+        pool_mode='max',
+    )
+    test_pool_2 = Conv2D(
+        1, (2,2),
+        pool_kernel_size=3,
+        pool_stride=1,
+        pool_mode='avg',
+    )
+    test_pool_array = []
+    test_pool_array.append(np.array([[2,1,2],[0,2,-1],[3,1,5]]))
+    test_pool_array.append(np.array([[7.23,-0.12,12.53],[2,1.25,3.63],[-0.17,12.32,2.22]]))
+    print(test_pool_1.pool(test_pool_array))
+    print(test_pool_2.pool(test_pool_array))
