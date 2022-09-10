@@ -1,10 +1,10 @@
 # Guide : https://www.tensorflow.org/api_docs/python/tf/keras/layers/Dense
 
 from typing import Optional, Union
-import classes.layers.Layer
+from classes.layers.Layer import Layer as BaseLayer
 import numpy as np
 
-class Dense(classes.layers.Layer.Layer):
+class Dense(BaseLayer):
     """
     Dense layer
     """

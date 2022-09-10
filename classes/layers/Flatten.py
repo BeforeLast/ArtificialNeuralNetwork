@@ -1,10 +1,10 @@
 # Guide : https://www.tensorflow.org/api_docs/python/tf/keras/layers/Flatten
 
 from typing import Optional, Union
-import classes.layers.Layer
+from classes.layers.Layer import Layer as BaseLayer
 import numpy as np
 
-class Flatten(classes.layers.Layer.Layer):
+class Flatten(BaseLayer):
     """
     Flatten layer
     """

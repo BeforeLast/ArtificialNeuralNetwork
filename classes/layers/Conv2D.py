@@ -2,10 +2,10 @@
 
 from multiprocessing.sharedctypes import Value
 from typing import Union
-import Layer
+from classes.layers.Layer import Layer as BaseLayer
 import numpy as np
 
-class Conv2D(Layer.Layer):
+class Conv2D(BaseLayer):
     """
     Convolutional layer with 2D input
     """
@@ -191,6 +191,7 @@ of two integers")
         """
         Pool the given input using the layer pool method
         """
+        pass
 
 if __name__ == "__main__":
     # TEST
