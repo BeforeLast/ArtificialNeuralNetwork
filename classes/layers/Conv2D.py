@@ -1,8 +1,8 @@
 # Guide : https://www.tensorflow.org/api_docs/python/tf/keras/layers/Conv2D
 
-from multiprocessing.sharedctypes import Value
 from typing import Union
 from classes.layers.Layer import Layer as BaseLayer
+from classes.misc.Function import conv2d_fpack
 import numpy as np
 
 class Conv2D(BaseLayer):
@@ -159,7 +159,6 @@ of two integers")
         ## Pooling kernel
         self.pool_kernel = np.ones(self.pool_kernel_size)
 
-
     def calculate(self, input):
         """
         Calculate the given input tensor to given output
@@ -185,7 +184,11 @@ of two integers")
         """
         Detect the given input using activation function
         """
-        pass
+        feature_map_result = []
+        for feature_map in input:
+            feature_map_result.append(conv2d_fpack['relu'](feature_map))
+        return feature_map_result
+        
 
     def pool(self, input):
         """
@@ -195,7 +198,7 @@ of two integers")
 
 if __name__ == "__main__":
     # TEST
-    ## Constructor
+    # ## Constructor
     c2d_layer_1 = Conv2D(1, (2, 2))
     c2d_layer_2 = Conv2D(
         2, (4, 4), conv_stride=1, conv_padding_size=2,
@@ -211,3 +214,11 @@ if __name__ == "__main__":
     ### Pool kernel
     print(c2d_layer_1.pool_kernel)
     print(c2d_layer_2.pool_kernel)
+    ## Detector
+    test_detector = Conv2D(1, (2,2))
+    test_detector_array = []
+    test_detector_array.append(np.array([[2,-6],[0,-1]]))
+    test_detector_array.append(np.array([[7.2341,-0.1226],[-0.1763,12.316872]]))
+    print(test_detector_array)
+    print()
+    print(test_detector.detect(test_detector_array))
