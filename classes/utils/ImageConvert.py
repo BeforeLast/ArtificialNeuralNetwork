@@ -1,5 +1,4 @@
 from PIL import Image
-import keras
 import numpy as np
 import os
 import tensorflow as tf
