@@ -33,22 +33,41 @@ class ImageConvert():
     Returns a 2D array with each elmt consists of image_data and its label
     """
 
-    ds = keras.utils.image_dataset_from_directory(
-      self.dir_path,
-      batch_size = None
-    )
-    
-    # normalize
-    normalization_layer = keras.layers.Rescaling(1./255)
-    normalized_ds = ds.map((lambda x, y: (normalization_layer(x), y)))
-
-    # get largest dimension
     max_height, max_width = self.get_largest_dimension()
 
     result = []
-    for image, label in normalized_ds:
-      # resize with zero padding
-      resized_image = tf.image.resize_with_pad(image, max_height, max_width)
-      result.append([resized_image.numpy(), label.numpy()])
+
+    for root, dirs, files in os.walk("data/test"):
+      if (root == "data/test\dogs"):
+        for name in files:
+          # open image 
+          image = Image.open(os.path.join(root,name))
+
+          # resize with zero pad
+          resized_image = tf.image.resize_with_pad(image, max_height, max_width)
+
+          # get image data as array
+          data = np.array(resized_image)
+
+          # set label to 0 (dogs)
+          label = 0
+
+          result.append([data, label])
+      
+      elif (root == "data/test\cats"):
+        for name in files:
+          # open image 
+          image = Image.open(os.path.join(root,name))
+
+          # resize with zero pad
+          resized_image = tf.image.resize_with_pad(image, max_height, max_width)
+
+          # get image data as array
+          data = np.array(resized_image)
+
+          # set label to 1 (cats)
+          label = 1
+
+          result.append([data, label])
 
     return np.asarray(result)
