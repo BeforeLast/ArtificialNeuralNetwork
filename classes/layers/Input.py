@@ -2,6 +2,7 @@
 
 from typing import Optional, Union
 from classes.layers.Layer import Layer as BaseLayer
+from classes.utils.ImageConvert import ImageConvert
 import numpy as np
 
 class InputLayer(BaseLayer):
@@ -25,9 +26,11 @@ class InputLayer(BaseLayer):
 
     def calculate(self, input):
         """
-        ...
+        Return input data as array from image folder
         """
-        pass
+
+        data = ImageConvert().convert()
+        return data
 
     def update(self):
         """
