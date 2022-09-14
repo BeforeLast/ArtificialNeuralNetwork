@@ -10,5 +10,3 @@ misc = {
         lambda input, filter,
             padding, stride: (input - filter + 2*padding)//stride + 1,
 }
-
-## ... FUNCTION PACK
