@@ -24,7 +24,7 @@ class Conv2D(BaseLayer):
     conv_padding_size:int = None
     conv_stride:Union[int, tuple, list] = None
     conv_filters:tuple[list[np.ndarray], float] = None
-    conv_output_shape:tuple(int, int, int)
+    conv_output_shape:tuple[int, int, int, int] = None
 
     # Detector info
     algorithm:str = None
@@ -170,6 +170,8 @@ of two integers")
         conv_res = self.convolve(input)
         detc_res = self.detect(conv_res)
         pool_res = self.pool(detc_res)
+        self.input = input.copy()
+        self.output = pool_res.copy()
         return pool_res
 
     def update(self):
@@ -190,7 +192,7 @@ of two integers")
             # Iterate through filters
             for filters, bias in self.conv_filters:
                 # Initiate single filter output 
-                single_output = np.zeros(self.input_shape[1:3])
+                single_output = np.zeros(self.conv_output_shape)
                 # Reshape data to match channel
                 data_copy = data_copy.reshape(self.input_shape[1:])
                 # Iterate through channel
@@ -298,6 +300,16 @@ of two integers")
             pool_result.append(np.array(temp))
         return pool_result
     
+    def compile(self, input_shape):
+        """
+        COMPILING PURPOSE
+        Compile layer to be used by calucating output shape and
+        instantiating kernels
+        """
+        self.input_shape = input_shape
+        self.generate_filters()
+        self.calculate_output_shape()
+
     def generate_filters(self):
         """
         COMPILING PURPOSE
@@ -311,21 +323,27 @@ of two integers")
             temp_filters = []
             for channel in range(num_of_channels):
                 # Generate channel filter(s)
-                temp_filters.append(np.random.rand(self.conv_kernel_size))
+                temp_filters.append(np.random.rand(*self.conv_kernel_size))
             temp_bias = np.random.rand(1)[0]
             self.conv_filters.append((temp_filters, temp_bias))
     
-    def calculate_output_shape(self):
-        # (10, 28, 28, 3)
-        # 10 images with 28x28 size and 3 channel
-        output_batch = self.num_of_filters * self.input_shape[0]
+    def calculate_output_shape(self, input_shape=None):
+        """
+        Calculate ouput shape from layer's input shape or the given
+        input shape
+        """
+        # Get input shape
+        if not input_shape:
+            input_shape = self.input_shape
+        output_batch = self.num_of_filters * input_shape[0]
         # Convolution output shape
         pool_y_dim = misc['expected_output_dim_length'](
-            self.input_shape[1], self.conv_kernel_size[0],
-            self.conv_padding_size[0], self.conv_stride[0])
+            input_shape[1], self.conv_kernel_size[0],
+            self.conv_padding_size, self.conv_stride[0])
         pool_x_dim = misc['expected_output_dim_length'](
-            self.input_shape[2], self.conv_kernel_size[1],
-            self.conv_padding_size[1], self.conv_stride[1])
+            input_shape[2], self.conv_kernel_size[1],
+            self.conv_padding_size, self.conv_stride[1])
+        self.conv_output_shape = (pool_y_dim, pool_x_dim)
         # Pooling output shape
         output_y_dim = misc['expected_output_dim_length'](
             pool_y_dim, self.pool_kernel_size[0],
@@ -343,7 +361,7 @@ of two integers")
 
 if __name__ == "__main__":
     # TEST
-    # ## Constructor
+    ## Constructor
     c2d_layer_1 = Conv2D(1, (2, 2))
     c2d_layer_2 = Conv2D(
         2, (4, 4), conv_stride=1, conv_padding_size=2,
@@ -359,6 +377,20 @@ if __name__ == "__main__":
     ### Pool kernel
     print(c2d_layer_1.pool_kernel)
     print(c2d_layer_2.pool_kernel)
+    ## Compile
+    c2d_test_compile = Conv2D(
+        2, (3,3),
+        conv_stride=1, conv_padding_size=0,
+        activation='relu',
+        pool_kernel_size=(2,2), pool_stride=1,
+        pool_mode='max')
+    c2d_test_compile.compile((10, 28, 28, 3))
+    print("input shape test:", c2d_test_compile.input_shape == (10, 28, 28, 3))
+    print("output shape test:", c2d_test_compile.output_shape == (20, 25, 25, 1))
+    ## Calculate
+    c2d_test_compile.calculate(np.random.rand(10, 28, 28, 3))
+    print(c2d_test_compile.input[0].shape)
+    print(c2d_test_compile.output[0].shape)
     ## Detector
     test_detector = Conv2D(1, (2,2))
     test_detector_array = []
