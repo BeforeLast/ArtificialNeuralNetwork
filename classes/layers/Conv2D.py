@@ -1,8 +1,10 @@
 # Guide : https://www.tensorflow.org/api_docs/python/tf/keras/layers/Conv2D
 
+from tkinter import E
 from typing import Union
 from classes.layers.Layer import Layer as BaseLayer
 from classes.misc.Function import conv2d_fpack, misc
+from scipy.signal import convolve
 import numpy as np
 
 class Conv2D(BaseLayer):
@@ -22,6 +24,7 @@ class Conv2D(BaseLayer):
     conv_padding_size:int = None
     conv_stride:Union[int, tuple, list] = None
     conv_filters:tuple[list[np.ndarray], float] = None
+    conv_output_shape:tuple(int, int, int)
 
     # Detector info
     algorithm:str = None
@@ -179,7 +182,63 @@ of two integers")
         """
         Convolve the layer
         """
-        pass
+        output = []
+        # Iterate batch
+        for data in input:
+            # Copy data to prevent reference edit
+            data_copy:np.ndarray = data.copy()
+            # Iterate through filters
+            for filters, bias in self.conv_filters:
+                # Initiate single filter output 
+                single_output = np.zeros(self.input_shape[1:3])
+                # Reshape data to match channel
+                data_copy = data_copy.reshape(self.input_shape[1:])
+                # Iterate through channel
+                for channel in range(self.input_shape[-1]):
+                    # Split channel data
+                    temp_channel_data = data_copy[:,:,channel]
+                    # Add padding
+                    temp_channel_data = np.pad(
+                        temp_channel_data, self.conv_padding_size,
+                        mode='constant', constant_values=0)
+                    # Convolve process
+                    temp_single_output = []
+                    for y in range(0,
+                        temp_channel_data.shape[0], self.conv_stride[0]):
+                        temp_row = []
+                        for x in range(0,
+                            temp_channel_data.shape[1], self.conv_stride[1]):
+                            # Get receptive field
+                            receptive_field = temp_channel_data[
+                                y:y+self.conv_kernel_size[0],
+                                x:x+self.conv_kernel_size[1]]
+                            if receptive_field.shape != self.conv_kernel_size:
+                                # Skip if receptive field is not the same
+                                # shape as kernel
+                                continue
+                            else:
+                                # Convolve and sum
+                                temp_row.append(
+                                    np.sum(
+                                        convolve(
+                                        receptive_field,
+                                        filters[channel],
+                                        mode='same')))
+                        if len(temp_row):
+                            # Add row to single channel output
+                            temp_single_output.append(temp_row)
+                        else:
+                            # Stop stride convolution if row empty
+                            break
+                    # Convert channel convolve to np ndarray
+                    temp_single_output = np.array(temp_single_output)
+                    # Sum channel output to single output
+                    single_output += temp_single_output
+                # Add bias to summ of channel(s) output
+                single_output += bias
+                # Add to batch output
+                output.append(single_output)
+        return output
     
     def detect(self, input):
         """
@@ -279,6 +338,7 @@ of two integers")
         #       the number of input channel(s)
         output_channel = 1
         self.output_shape = (output_batch, output_y_dim, output_x_dim, output_channel)
+        return self.output_shape
 
 
 if __name__ == "__main__":
