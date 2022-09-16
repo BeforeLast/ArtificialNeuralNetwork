@@ -17,11 +17,11 @@ class Conv2D(BaseLayer):
     output_shape:Union[int, tuple, list] = None
 
     # Convolution info
-    filters:int = None
+    num_of_filters:int = None
     conv_kernel_size:Union[int, tuple, list] = None
     conv_padding_size:int = None
     conv_stride:Union[int, tuple, list] = None
-    conv_kernels:list[np.ndarray] = None
+    conv_filters:tuple[list[np.ndarray], float] = None
 
     # Detector info
     algorithm:str = None
@@ -50,7 +50,7 @@ class Conv2D(BaseLayer):
                 or filters < 1:
             raise ValueError("Filters value must be an integer equal or \
 greater than one")
-        self.filters = filters
+        self.num_of_filters = filters
         ### Kernel size
         if type(conv_kernel_size) is int:
             if conv_kernel_size < 1:
@@ -151,10 +151,10 @@ of two integers")
 
 
         # KERNELS INITIATION
-        self.conv_kernels = []
+        self.conv_filters = []
         ## Convolution kernels
-        for _ in range(self.filters):
-            self.conv_kernels.append(
+        for _ in range(self.num_of_filters):
+            self.conv_filters.append(
                 np.random.rand(*self.conv_kernel_size)
             )
         ## Pooling kernel
@@ -167,7 +167,7 @@ of two integers")
         conv_res = self.convolve(input)
         detc_res = self.detect(conv_res)
         pool_res = self.pool(detc_res)
-        pass
+        return pool_res
 
     def update(self):
         """
@@ -238,6 +238,48 @@ of two integers")
                     temp.append(temp_row)
             pool_result.append(np.array(temp))
         return pool_result
+    
+    def generate_filters(self):
+        """
+        COMPILING PURPOSE
+        Generate filters from current input_shape
+        """
+        # Get number of input channel(s)
+        num_of_channels = self.input_shape[-1]
+        self.conv_filters = []
+        for filter in range(self.num_of_filters):
+            # Generate _ filter(s)
+            temp_filters = []
+            for channel in range(num_of_channels):
+                # Generate channel filter(s)
+                temp_filters.append(np.random.rand(self.conv_kernel_size))
+            temp_bias = np.random.rand(1)[0]
+            self.conv_filters.append((temp_filters, temp_bias))
+    
+    def calculate_output_shape(self):
+        # (10, 28, 28, 3)
+        # 10 images with 28x28 size and 3 channel
+        output_batch = self.num_of_filters * self.input_shape[0]
+        # Convolution output shape
+        pool_y_dim = misc['expected_output_dim_length'](
+            self.input_shape[1], self.conv_kernel_size[0],
+            self.conv_padding_size[0], self.conv_stride[0])
+        pool_x_dim = misc['expected_output_dim_length'](
+            self.input_shape[2], self.conv_kernel_size[1],
+            self.conv_padding_size[1], self.conv_stride[1])
+        # Pooling output shape
+        output_y_dim = misc['expected_output_dim_length'](
+            pool_y_dim, self.pool_kernel_size[0],
+            0, self.pool_stride[0])
+        output_x_dim = misc['expected_output_dim_length'](
+            pool_x_dim, self.pool_kernel_size[1],
+            0, self.pool_stride[1])
+        # Channel
+        # note: only 1 channel will be resulted from convolging regardless
+        #       the number of input channel(s)
+        output_channel = 1
+        self.output_shape = (output_batch, output_y_dim, output_x_dim, output_channel)
+
 
 if __name__ == "__main__":
     # TEST
@@ -252,8 +294,8 @@ if __name__ == "__main__":
         name='c2d_l2')
     ## Class preview
     ### Conv kernels
-    print(c2d_layer_1.conv_kernels)
-    print(c2d_layer_2.conv_kernels)
+    print(c2d_layer_1.conv_filters)
+    print(c2d_layer_2.conv_filters)
     ### Pool kernel
     print(c2d_layer_1.pool_kernel)
     print(c2d_layer_2.pool_kernel)
