@@ -21,7 +21,7 @@ class Dense(BaseLayer):
     
     def __init__(self, 
                  units, 
-                 algorithm='relu'
+                 activation='relu'
                 ):
         """
         Class constructor
@@ -36,12 +36,12 @@ class Dense(BaseLayer):
             raise TypeError('Number of unit must be an integer')
         
         # Activation algorithm
-        if type(algorithm) is not str:
+        if type(activation) is not str:
             raise TypeError('Activation algorithm must be a string')
-        elif algorithm.lower() not in ['relu', 'sigmoid']:
+        elif activation.lower() not in ['relu', 'sigmoid']:
             raise NotImplementedError('Activation algorithm is not supported')
         else:
-            self.algorithm = algorithm.lower()
+            self.algorithm = activation.lower()
 
     def calculate(self, input):
         """
