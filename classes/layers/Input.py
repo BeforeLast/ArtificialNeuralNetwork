@@ -79,3 +79,15 @@ was expected and {output.shape} was given')
         Does not exist for this layer
         """
         pass
+
+if __name__ == "__main__":
+    input_test = InputLayer((28,28,3))
+    input_test.compile()
+    print("SHAPE TEST")
+    print("input_shape:", input_test.input_shape)
+    print("output_shape:", input_test.output_shape)
+    print("\nPROCESS TEST")
+    input_input = np.random.rand(28,28,3)
+    input_output = input_test.calculate(input_input)
+    print("process output shape:", input_output.shape)
+    print("process output type:", type(input_output))

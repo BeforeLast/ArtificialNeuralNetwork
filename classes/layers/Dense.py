@@ -114,3 +114,15 @@ but {np.array(input).shape} shape was given.')
         Update the layer's weight
         """
         pass
+
+if __name__ == "__main__":
+    dense_test = Dense(2)
+    dense_test.compile((None, 8))
+    dense_input = np.arange(8)
+    print("input:", dense_input)
+    print(dense_test.weights)
+    print(dense_test.weights.shape)
+    print()
+    print()
+    dense_output = dense_test.calculate(dense_input)
+    print(dense_output)
