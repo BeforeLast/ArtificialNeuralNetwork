@@ -180,6 +180,7 @@ of two integers")
         """
         pass
     
+    # TODO : FIX CONVOLVE
     def convolve(self, input):
         """
         Convolve the layer
@@ -242,32 +243,33 @@ of two integers")
                 output.append(single_output)
         return output
     
+    # DONE : FIX DETECTOR
     def detect(self, input):
         """
         Detect the given input using activation function
         """
         # Detetor process
         detector_result = []
-        for feature_map in input:
-            detector_result.append(conv2d_fpack['relu'](feature_map))
+        detector_result = conv2d_fpack['relu'](input)
         return detector_result
         
-
+    # DONE : FIX POOLING
     def pool(self, input):
         """
         Pool the given input using the layer pool method
         """
+        pool_input_shape = input.shape[-3:]
         
         ## DEBUGGING PURPOSE ##
         # See expected pool output shape
-        pool_input_shape = input[0].shape
         pool_output_shape = (
             misc['expected_output_dim_length'](
                 pool_input_shape[0], self.pool_kernel_size[0],
                 0, self.pool_stride[0]),
             misc['expected_output_dim_length'](
                 pool_input_shape[1], self.pool_kernel_size[1],
-                0, self.pool_stride[1]) 
+                0, self.pool_stride[1]),
+            pool_input_shape[-1]
         )
         ##
 
@@ -279,15 +281,16 @@ of two integers")
             pool_mode_function = np.average
         
         # Pooling process
-        pool_result = []
-        for detector in input:
+        pool_result = None
+        for channel in range(input.shape[-1]):
             temp = []
-            for y in range(0, len(detector), self.pool_stride[0]):
+            for y in range(0, pool_input_shape[0], self.pool_stride[0]):
                 temp_row = []
-                for x in range(0, len(detector[0]), self.pool_stride[1]):
-                    receptive_field = detector[
+                for x in range(0, pool_input_shape[1], self.pool_stride[1]):
+                    receptive_field = input[
                         y:y+self.pool_kernel_size[0],
-                        x:x+self.pool_kernel_size[1]]
+                        x:x+self.pool_kernel_size[1],
+                        channel]
                     if receptive_field.shape != self.pool_kernel_size:
                         # continue if receptive field does not have shape of
                         # pool's kernel size
@@ -297,9 +300,15 @@ of two integers")
                     # skip pool result for the row if the row is empty due to
                     # the difference in size of receptive field and kernel
                     temp.append(temp_row)
-            pool_result.append(np.array(temp))
+            if pool_result == None:
+                # Instantiate pool result with first channel pool
+                pool_result = np.array(temp)
+            else:
+                pool_result = np.dstack((pool_result, np.array(temp)))
         return pool_result
     
+    # ANCHOR : COMPILING
+    # DONE : FIX COMPILING
     def compile(self, input_shape):
         """
         COMPILING PURPOSE
@@ -310,6 +319,7 @@ of two integers")
         self.generate_filters()
         self.calculate_output_shape()
 
+    # DONE : FIX GENERATE FILTERS
     def generate_filters(self):
         """
         COMPILING PURPOSE
@@ -327,15 +337,14 @@ of two integers")
             temp_bias = np.random.rand(1)[0]
             self.conv_filters.append((temp_filters, temp_bias))
     
+    # DONE : FIX OUTPUT SHAPE
     def calculate_output_shape(self, input_shape=None):
         """
         Calculate ouput shape from layer's input shape or the given
         input shape
         """
         # Get input shape
-        if not input_shape:
-            input_shape = self.input_shape
-        output_batch = self.num_of_filters * input_shape[0]
+        output_batch = None
         # Convolution output shape
         pool_y_dim = misc['expected_output_dim_length'](
             input_shape[1], self.conv_kernel_size[0],
@@ -352,9 +361,8 @@ of two integers")
             pool_x_dim, self.pool_kernel_size[1],
             0, self.pool_stride[1])
         # Channel
-        # note: only 1 channel will be resulted from convolging regardless
-        #       the number of input channel(s)
-        output_channel = 1
+        # note: output channel will follow num_of_filters
+        output_channel = self.num_of_filters
         self.output_shape = (output_batch, output_y_dim, output_x_dim, output_channel)
         return self.output_shape
 
@@ -393,27 +401,25 @@ if __name__ == "__main__":
     print(c2d_test_compile.output[0].shape)
     ## Detector
     test_detector = Conv2D(1, (2,2))
-    test_detector_array = []
-    test_detector_array.append(np.array([[2,-6],[0,-1]]))
-    test_detector_array.append(np.array([[7.2341,-0.1226],[-0.1763,12.316872]]))
+    test_detector_array = np.array([[[2, 7.2341], [-6,-0.1226]],
+                [[0,-0.1763],[-1,12.316872]]])
     print(test_detector_array)
     print()
-    print(test_detector.detect(test_detector_array))
+    print()
+    test_detector_result = test_detector.detect(test_detector_array)
+    print(test_detector_result)
+    print("TEST SHAPE :", test_detector_array.shape == test_detector_result.shape)
     ## Pooling
     test_pool_1 = Conv2D(
         1, (2,2),
         pool_kernel_size=(2,2),
-        pool_stride=(1,1),
+        pool_stride=1,
         pool_mode='max',
     )
-    test_pool_2 = Conv2D(
-        1, (2,2),
-        pool_kernel_size=3,
-        pool_stride=1,
-        pool_mode='avg',
-    )
-    test_pool_array = []
-    test_pool_array.append(np.array([[2,1,2],[0,2,-1],[3,1,5]]))
-    test_pool_array.append(np.array([[7.23,-0.12,12.53],[2,1.25,3.63],[-0.17,12.32,2.22]]))
-    print(test_pool_1.pool(test_pool_array))
-    print(test_pool_2.pool(test_pool_array))
+    test_pool_array = np.array([[[2, 7.2341], [-6, -0.1226]],
+                [[0, -0.1763],[-1, 12.316872]]])
+    print(test_pool_array)
+    print(test_pool_array.shape)
+    test_pool_result = test_pool_1.pool(test_pool_array)
+    print(test_pool_result)
+    print(test_pool_result.shape)
