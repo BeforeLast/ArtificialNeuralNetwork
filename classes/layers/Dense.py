@@ -2,13 +2,8 @@
 
 from typing import Optional, Union
 from classes.layers.Layer import Layer as BaseLayer
+from classes.misc.Function import dense_fpack
 import numpy as np
-
-def relu(num):
-    return np.maximum(num, 0)
-    
-def sigmoid(num):
-    return 1 / (1 + np.exp(-num))
 
 class Dense(BaseLayer):
     """
@@ -20,81 +15,99 @@ class Dense(BaseLayer):
     output = None
     algorithm:str = None
     input_shape:Union[int, tuple, list] = None
-    number_unit:int = None
-    ouput_shape:Union[int, tuple, list] = None
-    weights = None
-    biases = None
+    output_shape:Union[int, tuple, list] = None
+    num_of_units:int = None
+    weights:np.ndarray = None
     
     def __init__(self, 
-                 input_shape,
-                 number_unit, 
+                 units, 
                  algorithm='relu'
                 ):
         """
         Class constructor
         """
-        if type(input_shape) is int:
-            if input_shape < 1:
-                raise ValueError('Input shape must be an integer not less than one')
-            else:
-                self.input_shape = (input_shape,)
-        elif (
-            (type(input_shape) is tuple or type(input_shape) is list)
-        ):
-            if(len(input_shape) == 2
-            and type(input_shape[0]) is int 
-            and type(input_shape[1]) is int):
-                if input_shape[0] < 1 or input_shape[1] != 1:
-                    raise ValueError('Input size must be an integer not less than one and the second value must be one')
-                else:
-                    self.input_shape = tuple(input_shape[0])
-            elif(len(input_shape) == 1
-                and type(input_shape[0]) is int):
-                if input_shape[0] < 1:
-                    raise ValueError('Input size must be an integer not less than one')
-                else:
-                    self.input_shape = tuple(input_shape)
-        else:
-            raise ValueError('Input shape must be an integer, a list, or a tuple')
-            
         # Number of unit
-        if type(number_unit) is int:
-            if number_unit < 1:
+        if type(units) is int:
+            if units < 1:
                 raise ValueError('Number of unit must be an integer greater than zero')
             else:
-                self.number_unit = number_unit
+                self.num_of_units = units
         else:
-            raise ValueError('Number of unit must be an integer')
+            raise TypeError('Number of unit must be an integer')
         
         # Activation algorithm
         if type(algorithm) is not str:
-            raise ValueError('Activation algorithm must be a string')
+            raise TypeError('Activation algorithm must be a string')
         elif algorithm.lower() not in ['relu', 'sigmoid']:
-            raise ValueError('Activation algorithm is not supported')
+            raise NotImplementedError('Activation algorithm is not supported')
         else:
-            self.algorithm = algorithm
-            
-        # Weights and biases
-        self.weights = np.random.rand(self.number_unit, self.input_shape[0])
-        self.biases = np.random.rand(self.number_unit)
+            self.algorithm = algorithm.lower()
 
     def calculate(self, input):
         """
         Calculate the given input tensor to given output
         """
-        if type(input) is not list and type(input) is not tuple:
-            raise ValueError('Input must be a list or a tuple')
+        # Check input type
+        if type(input) is not list \
+            and type(input) is not tuple \
+            and type(input) is not np.ndarray:
+            # Input is not a list/tuple/np.ndarray
+            raise TypeError('Input must be a list or a tuple')
+        elif np.array(input).shape != self.input_shape[1:]:
+            # Input shape mismatch
+            raise ValueError(f'Expected {self.input_shape[1:]} shape \
+but {np.array(input).shape} shape was given.')
         else:
-            self.input = np.asarray(input)
-            output_unactivated = np.zeros(self.number_unit)
-            for i in range(self.number_unit):
-                output_unactivated[i] = self.input.dot(self.weights[i]) + self.biases[i]
-            if self.algorithm.lower() == 'relu':
-                self.output = relu(output_unactivated)
-            elif self.algorithm.lower() == 'sigmoid':
-                self.output = sigmoid(output_unactivated)
-            return self.output
-            
+            # Convert input to np.ndarray
+            self.input = np.array(input)
+            # Add bias value at the beginning of the input (not bias weight)
+            self.input = np.insert(self.input, 0 , values=1)
+            # Dot product
+            dot_prod = np.dot(self.input, self.weights)
+            # Apply activation function to dot product
+            output = dense_fpack[self.algorithm](dot_prod)
+            self.output = output.copy()
+            return output
+
+    # ANCHOR : COMPILING
+    def compile(self, input_shape):
+        """
+        COMPILING PURPOSE
+        Compile layer with the given input shape
+        """
+        # Configure layer's class input_shape
+        if type(input_shape) is int:
+            # Only state data dimension
+            self.input_shape = (None, input_shape)
+        elif type(input_shape) is tuple or type(input_shape) is list:
+            # Input_shape is in a form of tuple or list
+            if len(input_shape) == 2:
+                # Batch (None) is stated and input size is stated
+                self.input_shape = tuple(input_shape)
+            elif len(input_shape) == 1:
+                # Only input size is stated
+                self.input_shape = (None, input_shape[0])
+        # Configure layer's class output_shape
+        self.calculate_output_shape()
+        # Instantiate weights
+        self.generate_weights()
+
+    def generate_weights(self):
+        """
+        COMPILING PURPOSE
+        Generate weigths matrix from current input_shape
+        """
+        self.weights = np.random.rand(
+            self.input_shape[-1] + 1,
+            self.num_of_units
+        )
+
+    def calculate_output_shape(self):
+        """
+        COMPILING PURPOSE
+        Calculate ouput shape from layer's input shape
+        """
+        self.output_shape = self.num_of_units
 
     def update(self):
         """
