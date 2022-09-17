@@ -19,10 +19,7 @@ class Dense(BaseLayer):
     num_of_units:int = None
     weights:np.ndarray = None
     
-    def __init__(self, 
-                 units, 
-                 activation='relu'
-                ):
+    def __init__(self, units, activation='relu', **kwargs):
         """
         Class constructor
         """
@@ -42,6 +39,9 @@ class Dense(BaseLayer):
             raise NotImplementedError('Activation algorithm is not supported')
         else:
             self.algorithm = activation.lower()
+        
+        # Misc
+        self.name = kwargs.get("name", "Dense")
 
     def calculate(self, input):
         """
