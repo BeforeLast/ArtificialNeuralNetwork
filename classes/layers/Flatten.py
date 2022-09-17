@@ -42,7 +42,7 @@ class Flatten(BaseLayer):
             self.input_shape = tuple(fix_shape)
         else:
             # Batch input shape already stated (None)
-            self.input_shape = input_shape
+            self.input_shape = tuple(input_shape)
         self.calculate_output_shape()
             
     def calculate_output_shape(self):
