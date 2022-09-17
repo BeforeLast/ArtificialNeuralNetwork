@@ -1,7 +1,9 @@
 from typing import Union
 
 from classes.layers.Layer import Layer
+import numpy as np
 
+from classes.utils.ImageDirectoryIterator import ImageDirectoryIterator
 
 class Sequential():
     """
@@ -35,6 +37,9 @@ class Sequential():
         - loss
         - metrics
         """
+        # # Check whether model has layer or not
+        if not self.layers or not len(self.layers):
+            raise AttributeError("Model does not have any layer")
         # Instantiate ouput shape chain
         output_shape_chain = None
         # Iterate and compile layers sequentially
@@ -55,7 +60,49 @@ class Sequential():
         """
         Predict the labels from the given data
         """
-        pass
+        if type(data) is ImageDirectoryIterator:
+            results = []
+            true_labels = []
+            step = next(data)
+            data_len = len(data)
+            counter = 0
+            while step:
+                # Get data from iterator
+                result = step['data']
+                # Get label from iterator
+                true_labels.append(step['label'])
+                # Calculate through model
+                for layer in self.layers:
+                    result = layer.calculate(result)
+                results.append(result)
+                step = next(data)
+                counter += 1
+                print(f"Step: {counter}/{data_len}")
+            return {
+                'results':results,
+                'true_labels':true_labels
+            }
+        elif type(data) in [np.ndarray, list, tuple]:
+            # Check data processing type (batch or not batch)
+            data_check = np.array(data)
+            if data_check.shape == self.input_shape[1:]:
+                # Single prediction
+                # data shape is the same as input shape
+                # meaning it is a single prediction
+                result = data
+                for layer in self.layers:
+                    result = layer.calculate(result)
+                return result
+            else:
+                # Batch prediction
+                results = []
+                # Iterate step
+                for step in data_check:
+                    result = step
+                    for layer in self.layers:
+                        result = layer.calculate(result)
+                    results.append(result)
+                return results
 
     def save(self, dir):
         """
