@@ -353,8 +353,8 @@ of two integers")
     # DONE : FIX OUTPUT SHAPE
     def calculate_output_shape(self):
         """
-        Calculate ouput shape from layer's input shape or the given
-        input shape
+        COMPILING PURPOSE
+        Calculate ouput shape from layer's input shape
         """
         # Get input shape
         input_shape = self.input_shape
