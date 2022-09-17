@@ -14,49 +14,43 @@ class Flatten(BaseLayer):
     output = None
     algorithm:str = None
     input_shape:Union[int, tuple, list] = None
-    ouput_shape:Union[int, tuple, list] = None
-    flatten_size:int = None
+    output_shape:Union[int, tuple, list] = None
     
-    def __init__(self, input_shape):
+    def __init__(self, **kwargs):
         """
         Class constructor
+        
         """
-        if type(input_shape) is int:
-            if input_shape < 1:
-                raise ValueError('Input shape must be an integer not less than one')
-            else:
-                self.input_shape = (input_shape, input_shape)
-                self.size = input_shape * input_shape
-        elif (
-            (type(input_shape) is tuple or type(input_shape) is list)
-            and len(input_shape) == 2
-            and type(input_shape[0]) is int 
-            and type(input_shape[1]) is int
-        ):
-            if input_shape[0] < 1 or input_shape[1] < 1:
-                raise ValueError('Input size must be an integer not less than one')
-            else:
-                self.input_shape = input_shape
-                self.size = input_shape[0] * input_shape[1]
+        self.name = kwargs.get("name", "FlattenLayer")
 
-    def calculate(self, input):
+    def calculate(self, input:np.ndarray):
         """
         Convert multi-dimensional input tensors into a single dimension
         """
-        if type(input) is not list and type(input) is not tuple:
-            raise ValueError('Input must be a list or a tuple')
+        return input.flatten()
+
+    def compile(self, input_shape):
+        """
+        COMPILING PURPOSE
+        Compile layer to be used by calucating output shape and assigning input
+        shape
+        """
+        if input_shape[0] != None:
+            # Only state data dimension and channel
+            fix_shape = [None]
+            fix_shape.extend(list(input_shape))
+            self.input_shape = tuple(fix_shape)
         else:
-            calculate_input_shape = np.shape(input)
-            acceptable_input_shape = tuple(self.input_shape)
-            if calculate_input_shape != acceptable_input_shape:
-                raise ValueError('Input shape is not compatible. The input shape is {calculate_input_shape} \
-                                 but the acceptable size is {acceptable_input_shape}')
-            else:
-                flatted_layer = []
-                for i in range(len(input)):
-                    for j in range(len(input[0])):
-                        flatted_layer.append(input[i][j])
-                return flatted_layer
+            # Batch input shape already stated (None)
+            self.input_shape = input_shape
+        self.calculate_output_shape()
+            
+    def calculate_output_shape(self):
+        """
+        COMPILING PURPOSE
+        Calculate ouput shape from layer's input shape
+        """
+        self.output_shape = (None, np.prod(self.input_shape[1:]))
 
     def update(self):
         """
@@ -64,3 +58,12 @@ class Flatten(BaseLayer):
         Does not exist for this layer
         """
         pass
+
+if __name__ == "__main__":
+    flatten_test = Flatten()
+    input_shape = (25, 25, 16)
+    expected_input_shape = (None, 25, 25, 16)
+    expected_output_shape = (None, 25*25*16)
+    flatten_test.compile(input_shape)
+    print("input_shape TEST:", flatten_test.input_shape == expected_input_shape)
+    print("output_shape TEST:", flatten_test.output_shape == expected_output_shape)
