@@ -11,6 +11,8 @@ class Sequential():
     # Model info
     name:str = None
     layers:list[Layer] = None
+    input_shape:tuple = None
+    output_shape:tuple = None
 
     # Training info
     optimizer:str = None
@@ -18,17 +20,29 @@ class Sequential():
     metrics:Union[list[str], str] = None
 
     ## METHODS
-    def __init__(self):
+    def __init__(self, layers:list[Layer], **kwargs):
         """
         Class constructor
         """
-        pass
+        self.name = kwargs.get("name", "Sequential")
+        self.layers = layers
 
-    def compile(self, optimizer, loss, metrics):
+    def compile(self, optimizer='sgd', loss='binary_crossentropy', metrics='accuracy'):
         """
         Compile the model by adjusting neural connection and training/test options
+        ! FOR MILESTONE 2 !
+        - optimizer
+        - loss
+        - metrics
         """
-        pass
+        # Instantiate ouput shape chain
+        output_shape_chain = None
+        # Iterate and compile layers sequentially
+        for layer in self.layers:
+            layer.compile(output_shape_chain)
+            output_shape_chain = layer.output_shape
+        self.input_shape = self.layers[0].input_shape
+        self.output_shape = self.layers[-1].input_shape
 
     def fit(self, data, label):
         """
