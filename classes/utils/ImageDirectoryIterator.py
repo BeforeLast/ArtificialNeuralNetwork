@@ -50,7 +50,7 @@ class ImageDirectoryIterator():
         self.label_mode = label_mode
         self.color_mode = color_mode
         self.target_size = target_size
-    
+
     def shuffle(self):
         # Converting from directory data to list of object consisting of label
         # and data
@@ -105,3 +105,9 @@ class ImageDirectoryIterator():
             self.current_idx == None
 
         return result
+    
+    def __len__(self):
+        """
+        Return the number of data
+        """
+        return len(self.shuffle_data_label)
