@@ -69,7 +69,7 @@ class ImageDirectoryIterator():
         self.current_idx = 0
     
     def __next__(self):
-        if self.current_idx == None:
+        if self.current_idx is None:
             # stop is current_idx is none (reached the end or not started yet)
             return
         # open image 
@@ -100,9 +100,9 @@ class ImageDirectoryIterator():
 
         # increment iterator
         self.current_idx += 1
-        if self.current_idx == len(self.shuffle_data_label):
+        if self.current_idx >= len(self.shuffle_data_label):
             # stop iteration if it reached the end
-            self.current_idx == None
+            self.current_idx = None
 
         return result
     
