@@ -24,7 +24,8 @@ class Conv2D(BaseLayer):
     conv_padding_size:int = None
     conv_stride:Union[int, tuple, list] = None
     conv_filters:tuple[list[np.ndarray], float] = None
-    conv_output_shape:tuple[int, int, int, int] = None
+    conv_output_shape:tuple[None, int, int, int] = None
+    conv_output:np.ndarray = None
 
     # Detector info
     algorithm:str = None
@@ -180,67 +181,71 @@ of two integers")
         """
         pass
     
-    # TODO : FIX CONVOLVE
+    # DONE : FIX CONVOLVE
     def convolve(self, input):
         """
         Convolve the layer
         """
-        output = []
-        # Iterate batch
-        for data in input:
-            # Copy data to prevent reference edit
-            data_copy:np.ndarray = data.copy()
-            # Iterate through filters
-            for filters, bias in self.conv_filters:
-                # Initiate single filter output 
-                single_output = np.zeros(self.conv_output_shape)
-                # Reshape data to match channel
-                data_copy = data_copy.reshape(self.input_shape[1:])
-                # Iterate through channel
-                for channel in range(self.input_shape[-1]):
-                    # Split channel data
-                    temp_channel_data = data_copy[:,:,channel]
-                    # Add padding
-                    temp_channel_data = np.pad(
-                        temp_channel_data, self.conv_padding_size,
-                        mode='constant', constant_values=0)
-                    # Convolve process
-                    temp_single_output = []
-                    for y in range(0,
-                        temp_channel_data.shape[0], self.conv_stride[0]):
-                        temp_row = []
-                        for x in range(0,
-                            temp_channel_data.shape[1], self.conv_stride[1]):
-                            # Get receptive field
-                            receptive_field = temp_channel_data[
-                                y:y+self.conv_kernel_size[0],
-                                x:x+self.conv_kernel_size[1]]
-                            if receptive_field.shape != self.conv_kernel_size:
-                                # Skip if receptive field is not the same
-                                # shape as kernel
-                                continue
-                            else:
-                                # Convolve and sum
-                                temp_row.append(
-                                    np.sum(
-                                        convolve(
-                                        receptive_field,
-                                        filters[channel],
-                                        mode='same')))
-                        if len(temp_row):
-                            # Add row to single channel output
-                            temp_single_output.append(temp_row)
+        output = None
+        # Copy input data to prevent reference edit
+        data_copy:np.ndarray = input.copy()
+        # Iterate through filters
+        for filters, bias in self.conv_filters:
+            # Initiate single filter output 
+            single_filter_output = np.zeros(self.conv_output_shape[-3:-1])
+            # Reshape data to match channel
+            data_copy = data_copy.reshape(self.input_shape[1:])
+            # Iterate through channel
+            for channel in range(self.input_shape[-1]):
+                # Split channel data
+                temp_channel_data = data_copy[:,:,channel]
+                # Add padding
+                temp_channel_data = np.pad(
+                    temp_channel_data, self.conv_padding_size,
+                    mode='constant', constant_values=0)
+                # Convolve process
+                temp_single_output = []
+                for y in range(0,
+                    temp_channel_data.shape[0], self.conv_stride[0]):
+                    temp_row = []
+                    for x in range(0,
+                        temp_channel_data.shape[1], self.conv_stride[1]):
+                        # Get receptive field
+                        receptive_field = temp_channel_data[
+                            y:y+self.conv_kernel_size[0],
+                            x:x+self.conv_kernel_size[1]]
+                        if receptive_field.shape != self.conv_kernel_size:
+                            # Skip if receptive field is not the same
+                            # shape as kernel
+                            continue
                         else:
-                            # Stop stride convolution if row empty
-                            break
-                    # Convert channel convolve to np ndarray
-                    temp_single_output = np.array(temp_single_output)
-                    # Sum channel output to single output
-                    single_output += temp_single_output
-                # Add bias to summ of channel(s) output
-                single_output += bias
-                # Add to batch output
-                output.append(single_output)
+                            # Convolve and sum
+                            temp_row.append(
+                                np.sum(
+                                    convolve(
+                                    receptive_field,
+                                    filters[channel],
+                                    mode='same')))
+                    if len(temp_row):
+                        # Add row to single channel output
+                        temp_single_output.append(temp_row)
+                    else:
+                        # Stop stride convolution if row empty
+                        break
+                # Convert channel convolve to np ndarray
+                temp_single_output = np.array(temp_single_output)
+                # Sum channel output to single output
+                single_filter_output += temp_single_output
+            # Add bias to sum of channel(s) output
+            single_filter_output += bias
+            # Add to output channel
+            if output is None:
+                # Instantiate output data
+                output = single_filter_output
+            else:
+                # Stack channel
+                output = np.dstack((output, single_filter_output))
+        self.conv_output = output.copy()
         return output
     
     # DONE : FIX DETECTOR
@@ -300,10 +305,11 @@ of two integers")
                     # skip pool result for the row if the row is empty due to
                     # the difference in size of receptive field and kernel
                     temp.append(temp_row)
-            if pool_result == None:
+            if pool_result is None:
                 # Instantiate pool result with first channel pool
                 pool_result = np.array(temp)
             else:
+                # Stack another channel pooling to previous stack
                 pool_result = np.dstack((pool_result, np.array(temp)))
         return pool_result
     
@@ -315,7 +321,14 @@ of two integers")
         Compile layer to be used by calucating output shape and
         instantiating kernels
         """
-        self.input_shape = input_shape
+        if len(input_shape) == 3:
+            # Only state data dimension and channel
+            fix_shape = [None]
+            fix_shape.extend(list(input_shape))
+            self.input_shape = tuple(fix_shape)
+        else:
+            # Batch input shape already stated (None)
+            self.input_shape = input_shape
         self.generate_filters()
         self.calculate_output_shape()
 
@@ -338,21 +351,22 @@ of two integers")
             self.conv_filters.append((temp_filters, temp_bias))
     
     # DONE : FIX OUTPUT SHAPE
-    def calculate_output_shape(self, input_shape=None):
+    def calculate_output_shape(self):
         """
         Calculate ouput shape from layer's input shape or the given
         input shape
         """
         # Get input shape
+        input_shape = self.input_shape
         output_batch = None
         # Convolution output shape
         pool_y_dim = misc['expected_output_dim_length'](
-            input_shape[1], self.conv_kernel_size[0],
+            input_shape[-3], self.conv_kernel_size[0],
             self.conv_padding_size, self.conv_stride[0])
         pool_x_dim = misc['expected_output_dim_length'](
-            input_shape[2], self.conv_kernel_size[1],
+            input_shape[-2], self.conv_kernel_size[1],
             self.conv_padding_size, self.conv_stride[1])
-        self.conv_output_shape = (pool_y_dim, pool_x_dim)
+        self.conv_output_shape = (pool_y_dim, pool_x_dim, self.num_of_filters)
         # Pooling output shape
         output_y_dim = misc['expected_output_dim_length'](
             pool_y_dim, self.pool_kernel_size[0],
@@ -378,6 +392,7 @@ if __name__ == "__main__":
         pool_stride=2,
         pool_mode='avg',
         name='c2d_l2')
+    
     ## Class preview
     ### Conv kernels
     print(c2d_layer_1.conv_filters)
@@ -386,19 +401,27 @@ if __name__ == "__main__":
     print(c2d_layer_1.pool_kernel)
     print(c2d_layer_2.pool_kernel)
     ## Compile
-    c2d_test_compile = Conv2D(
-        2, (3,3),
+    c2d_test = Conv2D(
+        2, (2,2),
         conv_stride=1, conv_padding_size=0,
         activation='relu',
         pool_kernel_size=(2,2), pool_stride=1,
         pool_mode='max')
-    c2d_test_compile.compile((10, 28, 28, 3))
-    print("input shape test:", c2d_test_compile.input_shape == (10, 28, 28, 3))
-    print("output shape test:", c2d_test_compile.output_shape == (20, 25, 25, 1))
+    c2d_test.compile((10, 28, 28, 3))
+    print("input shape test:", c2d_test.input_shape == (None, 28, 28, 3))
+    print("output shape test:", c2d_test.output_shape == (20, 25, 25, 1))
     ## Calculate
-    c2d_test_compile.calculate(np.random.rand(10, 28, 28, 3))
-    print(c2d_test_compile.input[0].shape)
-    print(c2d_test_compile.output[0].shape)
+    c2d_test.calculate(np.random.rand(4, 4, 3))
+    print(c2d_test.input)
+    print(c2d_test.input.shape)
+    print()
+    print()
+    print(c2d_test.conv_output)
+    print(c2d_test.conv_output.shape)
+    print()
+    print()
+    print(c2d_test.output)
+    print(c2d_test.output.shape)
     ## Detector
     test_detector = Conv2D(1, (2,2))
     test_detector_array = np.array([[[2, 7.2341], [-6,-0.1226]],
