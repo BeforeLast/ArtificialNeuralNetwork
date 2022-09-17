@@ -1,72 +1,70 @@
-from PIL import Image
-import numpy as np
 import os
-import tensorflow as tf
+
+from classes.utils.ImageDirectoryIterator import ImageDirectoryIterator
 
 class ImageConvert():
-  dir_path:str = "data/test"
+  rotate:float = None
+  rescale:float = None
 
-  def __init__(self):
-    pass
+  def __init__(self, rotate:float, rescale:float):
+    self.rotate = rotate
+    self.rescale = rescale
 
-  def get_largest_dimension(self):
-    """
-    Returns a tuple consists of max height and max width of all images
-    """
-
-    max_height = 0
-    max_width = 0
-
-    for root, dirs, files in os.walk(self.dir_path):
-      for name in files:
-        if name.endswith('.jpg'):
-          data = np.array(Image.open(os.path.join(root,name)))
-          if (data.shape[0] > max_height) : max_height = data.shape[0]
-          if (data.shape[1] > max_width) : max_width = data.shape[1]
-    
-    return (max_height, max_width)
-              
-
-  def convert(self):
+  def from_directory(self, directory:str, target_size:tuple[int,int],
+    mode:str='binary', color_mode:str='rgb'):
     """
     Returns a 2D array with each elmt consists of image_data and its label
     """
+    # Check target size
+    if type(target_size) not in [tuple, list]:
+      raise TypeError("Invalid type for target size")
+    elif len(target_size) != 2:
+      raise ValueError("Invalid target size format")
+    else:
+      target_size = tuple(target_size)
+    # Check color mode
+    if color_mode.lower() not in ['rgb','grayscale','rgba']:
+      raise NotImplementedError("Unsuported color mode, please use \
+'grayscale', 'rgb', or 'rgba' for color mode")
+    # Check mode
+    if mode.lower() not in ['categorical','binary']:
+      raise NotImplementedError("Unsuported classification mode, please use \
+'binary' or 'categorical' for classification mode")
 
-    max_height, max_width = self.get_largest_dimension()
+    # Instantiate ImageDirectoryIterator
+    image_di = ImageDirectoryIterator(self,
+      mode.lower(), color_mode.lower(), target_size)
+    
+    # Get labels
+    labels = [label for label in os.listdir(directory)
+      if os.path.join(directory, label)]
+    self.labels = labels
 
-    result = []
+    # Create labels encoding and decoding
+    for idx in range(len(labels)):
+      # Decoding dict
+      image_di.labels_decoding[idx] = labels[idx]
+      # Encoding dict
+      image_di.labels_encoding[labels[idx]] = idx
+    
+    # Files
+    for root, dirs, files in os.walk(directory):
+      # Get root folder as label
+      current_folder_name = os.path.basename(root)
+      # Converting data directory
+      if current_folder_name in labels:
+        # Get encoded label
+        
+        encoded_label = image_di.labels_encoding[current_folder_name]
+        # Iterate all file in label folder
+        for file in files:
+          if encoded_label not in image_di.directory_data:
+            image_di.directory_data[encoded_label] = []
 
-    for root, dirs, files in os.walk("data/test"):
-      if (root == "data/test\dogs"):
-        for name in files:
-          # open image 
-          image = Image.open(os.path.join(root,name))
-
-          # resize with zero pad
-          resized_image = tf.image.resize_with_pad(image, max_height, max_width)
-
-          # get image data as array
-          data = np.array(resized_image)
-
-          # set label to 0 (dogs)
-          label = 0
-
-          result.append([data, label])
-      
-      elif (root == "data/test\cats"):
-        for name in files:
-          # open image 
-          image = Image.open(os.path.join(root,name))
-
-          # resize with zero pad
-          resized_image = tf.image.resize_with_pad(image, max_height, max_width)
-
-          # get image data as array
-          data = np.array(resized_image)
-
-          # set label to 1 (cats)
-          label = 1
-
-          result.append([data, label])
-
-    return np.asarray(result)
+          image_di.directory_data[encoded_label] \
+            .append(os.path.join(root, file))
+    
+    # Shuffle data
+    image_di.shuffle()
+              
+    return image_di
