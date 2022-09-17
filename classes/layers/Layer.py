@@ -71,3 +71,21 @@ class Layer(ABC):
         Update weights from the calculated error-term
         """
         pass
+    
+    @classmethod
+    @abstractmethod
+    def compile(self, input_shape):
+        """
+        COMPILING PURPOSE
+        Compile layer with the given input shape
+        """
+        pass
+    
+    @classmethod
+    @abstractmethod
+    def calculate_output_shape(self):
+        """
+        COMPILING PURPOSE
+        Calculate ouput shape from layer's input shape
+        """
+        pass
