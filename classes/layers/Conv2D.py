@@ -407,9 +407,11 @@ if __name__ == "__main__":
         activation='relu',
         pool_kernel_size=(2,2), pool_stride=1,
         pool_mode='max')
-    c2d_test.compile((10, 28, 28, 3))
-    print("input shape test:", c2d_test.input_shape == (None, 28, 28, 3))
-    print("output shape test:", c2d_test.output_shape == (20, 25, 25, 1))
+    print("TYPE TEST:", type(c2d_test) is Conv2D)
+    c2d_test.compile((None, 4, 4, 3))
+    print("input shape test:", c2d_test.input_shape == (None, 4, 4, 3))
+    print("output shape test:", c2d_test.output_shape == (None, 2, 2, 2))
+    print()
     ## Calculate
     c2d_test.calculate(np.random.rand(4, 4, 3))
     print(c2d_test.input)
