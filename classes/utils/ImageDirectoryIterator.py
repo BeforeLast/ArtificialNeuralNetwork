@@ -4,6 +4,8 @@ from PIL import Image
 import tensorflow as tf
 from random import uniform
 
+from classes.misc.Constants import IMAGEDIRECTORYITERATOR_CONST
+
 class ImageDirectoryIterator():
     """
     ImageDirectoryIterator is a class to save directory based on labels
@@ -75,18 +77,29 @@ class ImageDirectoryIterator():
         # open image 
         image = Image.open(self.shuffle_data_label[self.current_idx]["data"])
 
-        # resize with zero pad
-        # resized_image = tf.image.resize_with_pad(image, *self.target_size)
+        # image_mode
+        img_mode = image.mode
 
         # resize
-        image = image.resize(self.target_size)
+        image.thumbnail(self.target_size, Image.ANTIALIAS)
+
+        # add zero padding
+        padding_color = IMAGEDIRECTORYITERATOR_CONST\
+            ['zero_padding'][img_mode.lower()]
+        padded_image = Image.new(img_mode,
+            self.target_size,
+            padding_color)
+        center_paste = (
+            (self.target_size[0] - image.size[0]) // 2,
+            (self.target_size[1] - image.size[1]) // 2)
+        padded_image.paste(image, center_paste)
 
         # rotate
-        image = image.rotate(
+        padded_image = padded_image.rotate(
             uniform(-self.image_convert.rotate, self.image_convert.rotate))
-        
+
         # get image data as array
-        data = np.array(image)
+        data = np.array(padded_image)
 
         # rescale
         data = data * self.image_convert.rescale
