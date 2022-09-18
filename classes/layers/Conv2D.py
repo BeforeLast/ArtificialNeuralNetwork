@@ -34,7 +34,6 @@ class Conv2D(BaseLayer):
     pool_kernel_size:Union[int, tuple, list] = None
     pool_stride:Union[int, tuple, list] = None
     pool_mode:str = None
-    pool_kernel:np.ndarray = None
     
     def __init__(self, 
             filters, conv_kernel_size,              # Conv configuration
@@ -162,7 +161,7 @@ of two integers")
                 np.random.rand(*self.conv_kernel_size)
             )
         ## Pooling kernel
-        self.pool_kernel = np.ones(self.pool_kernel_size)
+        # NO NEED
 
     def calculate(self, input):
         """
