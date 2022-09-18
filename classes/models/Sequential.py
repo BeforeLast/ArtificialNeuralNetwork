@@ -130,4 +130,9 @@ class Sequential():
         Return the selected selected by name or index,
         if name is given, then index is ignored
         """
-        pass
+        if name:
+            for layer in self.layers:
+                if layer.name == name:
+                    return layer
+        else:
+            return self.layers[index]
