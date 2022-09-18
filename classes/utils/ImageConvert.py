@@ -1,6 +1,7 @@
 import os
 
 from classes.utils.ImageDirectoryIterator import ImageDirectoryIterator
+from typing import Tuple
 
 class ImageConvert():
   rotate:float = None
@@ -10,7 +11,7 @@ class ImageConvert():
     self.rotate = rotate
     self.rescale = rescale
 
-  def from_directory(self, directory:str, target_size:tuple[int,int],
+  def from_directory(self, directory:str, target_size:Tuple[int,int],
     mode:str='binary', color_mode:str='rgb'):
     """
     Returns a 2D array with each elmt consists of image_data and its label

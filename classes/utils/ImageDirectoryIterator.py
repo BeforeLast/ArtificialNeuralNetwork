@@ -3,6 +3,7 @@ import numpy as np
 from PIL import Image
 import tensorflow as tf
 from random import uniform
+from typing import Dict, List, Tuple
 
 from classes.misc.Constants import IMAGEDIRECTORYITERATOR_CONST
 
@@ -13,22 +14,22 @@ class ImageDirectoryIterator():
     image_convert = None
 
     # LABELLING
-    labels_decoding:dict[int,str] = {}
+    labels_decoding:Dict[int,str] = {}
     # sample:
     # { 0:"cat", 1:"dog" }
-    labels_encoding:dict[str,int] = {}
+    labels_encoding:Dict[str,int] = {}
     # sample:
     # { "cat":0, "dog":1 }
-    labels:list[str] = []
+    labels:List[str] = []
     # sample:
     # ["cat", "dog"]
     label_mode:str = None
 
     # IMAGE AUGMENTATION
-    target_size:tuple[int,int] = None
+    target_size:Tuple[int,int] = None
 
     # BATCH ITERATOR
-    directory_data:dict[int,list[str]] = {}
+    directory_data:Dict[int,List[str]] = {}
     # sample:
     # {
     #   1: ["./data/cat/1.jpg", "./data/cat/2.jpg"],
@@ -36,7 +37,7 @@ class ImageDirectoryIterator():
     # }
 
     # Shuffle batch
-    shuffle_data_label:list[dict] = []
+    shuffle_data_label:List[dict] = []
     # sample:
     # [
     #   {"data":"./data/dog/1.jpg"", "label":2},
@@ -47,7 +48,7 @@ class ImageDirectoryIterator():
 
     def __init__(self, image_convert,
             label_mode:str, color_mode:str,
-            target_size:tuple[int, int]):
+            target_size:Tuple[int, int]):
         self.image_convert = image_convert
         self.label_mode = label_mode
         self.color_mode = color_mode

@@ -2,6 +2,7 @@ from typing import Union
 
 from classes.layers.Layer import Layer
 import numpy as np
+from typing import List
 
 from classes.utils.ImageDirectoryIterator import ImageDirectoryIterator
 
@@ -12,17 +13,17 @@ class Sequential():
     ## PROPERTIES
     # Model info
     name:str = None
-    layers:list[Layer] = None
+    layers:List[Layer] = None
     input_shape:tuple = None
     output_shape:tuple = None
 
     # Training info
     optimizer:str = None
     loss:str = None
-    metrics:Union[list[str], str] = None
+    metrics:Union[List[str], str] = None
 
     ## METHODS
-    def __init__(self, layers:list[Layer], **kwargs):
+    def __init__(self, layers:List[Layer], **kwargs):
         """
         Class constructor
         """

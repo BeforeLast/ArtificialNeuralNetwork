@@ -1,7 +1,7 @@
 # Guide : https://www.tensorflow.org/api_docs/python/tf/keras/layers/Conv2D
 
 from tkinter import E
-from typing import Union
+from typing import Union, Tuple, List
 from classes.layers.Layer import Layer as BaseLayer
 from classes.misc.Function import conv2d_fpack, misc
 from scipy.signal import convolve
@@ -23,8 +23,8 @@ class Conv2D(BaseLayer):
     conv_kernel_size:Union[int, tuple, list] = None
     conv_padding_size:int = None
     conv_stride:Union[int, tuple, list] = None
-    conv_filters:tuple[list[np.ndarray], float] = None
-    conv_output_shape:tuple[None, int, int, int] = None
+    conv_filters:Tuple[List[np.ndarray], float] = None
+    conv_output_shape:Tuple[None, int, int, int] = None
     conv_output:np.ndarray = None
 
     # Detector info
