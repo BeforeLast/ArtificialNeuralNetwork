@@ -1,0 +1,47 @@
+from classes.layers.Conv2D import Conv2D
+from classes.layers.Dense import Dense
+from classes.layers.Flatten import Flatten
+from classes.layers.Input import InputLayer
+## LAYER CLASS PACK
+layer_cpack = {
+    'conv2d': Conv2D,
+    'dense':Dense,
+    'flatten':Flatten,
+    'input':InputLayer
+}
+
+## LAYER DEFAULT CLASS INIT PACK
+def conv2d_default():
+    """
+    Return default conv2d class
+    """
+    return_class = Conv2D(1, (2,2))
+    return return_class
+
+def dense_default():
+    """
+    Return default conv2d class
+    """
+    return_class = Dense(1)
+    return return_class
+
+def flatten_default():
+    """
+    Return default conv2d class
+    """
+    return_class = Flatten()
+    return return_class
+
+def input_default():
+    """
+    Return default conv2d class
+    """
+    return_class = InputLayer((None, 1))
+    return return_class
+
+layerinit_cpack = {
+    'conv2d': conv2d_default,
+    'dense':dense_default,
+    'flatten':flatten_default,
+    'input':input_default
+}

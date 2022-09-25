@@ -1,9 +1,10 @@
+import json
 from typing import Union
 
 from classes.layers.Layer import Layer
 import numpy as np
 from typing import List
-
+from classes.misc.Class import layerinit_cpack
 from classes.utils.ImageDirectoryIterator import ImageDirectoryIterator
 
 class Sequential():
@@ -16,6 +17,7 @@ class Sequential():
     layers:List[Layer] = None
     input_shape:tuple = None
     output_shape:tuple = None
+    compiled:bool = False
 
     # Training info
     optimizer:str = None
@@ -49,6 +51,9 @@ class Sequential():
             output_shape_chain = layer.output_shape
         self.input_shape = self.layers[0].input_shape
         self.output_shape = self.layers[-1].input_shape
+
+        # Save compiled state
+        self.compiled = True
 
     def fit(self, data, label):
         """
@@ -105,19 +110,49 @@ class Sequential():
                     results.append(result)
                 return results
 
-    def save(self, dir):
+    def save(self, dir:str):
         """
-        ! FOR MILESTONE 2 !
         Save model to a file
         """
-        pass
+        # Convert model to json-like object
+        obj = {}
+        obj['name'] = self.name
+        obj['input_shape'] = self.input_shape
+        obj['output_shape'] = self.input_shape
+
+        # Layer
+        layer_obj = []
+        for layer in self.layers:
+            layer_obj.append(layer.to_object())
+        obj['layers'] = layer_obj
+
+        # Add json file extension
+        fixed_dir = dir
+        if not fixed_dir.endswith('.json'):
+            fixed_dir = dir + '.json'
+        
+        # Save to file
+        with open(fixed_dir, 'w') as f:
+            json.dump(obj, f, indent=2)
     
-    def load(self, dir):
+    def load(self, dir:str):
         """
-        ! FOR MILESTONE 2 !
         Load model from a file
         """
-        pass
+        with open(dir,'r') as f:
+            # Load file
+            data = json.load(f)
+            # Parse general information
+            self.name = data['name']
+            self.input_shape = data['input_shape']
+            self.output_shape = data['output_shape']
+            # Parse layer
+            self.layers = []
+            for layer in data['layers']:
+                temp_layer = layerinit_cpack[layer['layer_type']]()
+                temp_layer.from_object(layer['data'])
+                self.layers.append(temp_layer)
+
     
     # Debugging methods
     def summary(self):
