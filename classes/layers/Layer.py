@@ -89,3 +89,22 @@ class Layer(ABC):
         Calculate ouput shape from layer's input shape
         """
         pass
+    
+    
+    @classmethod
+    @abstractmethod
+    def to_object(self):
+        """
+        SAVING/LOADING PURPOSE
+        Convert self to json-like object (dictionary)
+        """
+        pass
+
+    @classmethod
+    @abstractmethod
+    def from_object(self, object):
+        """
+        SAVING/LOADING PURPOSE
+        Convert json-like object (dictionary) to layer object
+        """
+        pass

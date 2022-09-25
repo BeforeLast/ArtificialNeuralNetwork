@@ -13,8 +13,8 @@ class Flatten(BaseLayer):
     input = None
     output = None
     algorithm:str = None
-    input_shape:Union[int, tuple, list] = None
-    output_shape:Union[int, tuple, list] = None
+    input_shape:tuple = None
+    output_shape:tuple[None, int] = None
     
     def __init__(self, **kwargs):
         """
@@ -50,7 +50,7 @@ class Flatten(BaseLayer):
         COMPILING PURPOSE
         Calculate ouput shape from layer's input shape
         """
-        self.output_shape = (None, np.prod(self.input_shape[1:]))
+        self.output_shape = (None, np.prod(self.input_shape[1:]).item())
 
     def update(self):
         """
@@ -58,6 +58,34 @@ class Flatten(BaseLayer):
         Does not exist for this layer
         """
         pass
+    
+    def to_object(self):
+        """
+        SAVING/LOADING PURPOSE
+        Convert self to json-like object (dictionary)
+        """
+        obj = {}
+        obj['layer_type'] = 'flatten'
+        obj['data'] = {}
+        # Layer info
+        obj['data']['name'] = self.name
+        obj['data']['algorithm'] = self.algorithm
+        obj['data']['input_shape'] = self.input_shape
+        obj['data']['output_shape'] = self.output_shape
+        return obj
+
+    
+    def from_object(self, object):
+        """
+        SAVING/LOADING PURPOSE
+        Convert json-like object (dictionary) to layer object
+        """
+        # Layer info
+        self.name = object['name']
+        self.algorithm = object['algorithm']
+        self.input_shape = tuple(object['input_shape'])
+        self.output_shape = tuple(object['output_shape'])
+        
 
 if __name__ == "__main__":
     flatten_test = Flatten()

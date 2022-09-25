@@ -14,8 +14,8 @@ class Dense(BaseLayer):
     input = None
     output = None
     algorithm:str = None
-    input_shape:Union[int, tuple, list] = None
-    output_shape:Union[int, tuple, list] = None
+    input_shape:tuple[None, int] = None
+    output_shape:tuple[None, int] = None
     num_of_units:int = None
     weights:np.ndarray = None
     
@@ -97,23 +97,56 @@ but {np.array(input).shape} shape was given.')
         COMPILING PURPOSE
         Generate weigths matrix from current input_shape
         """
-        self.weights = np.random.rand(
-            self.input_shape[-1] + 1,
-            self.num_of_units
-        )
+        # Only generate weight if it is not generated yet
+        if self.weights is None:
+            self.weights = np.random.rand(
+                self.input_shape[-1] + 1,
+                self.num_of_units
+            )
 
     def calculate_output_shape(self):
         """
         COMPILING PURPOSE
         Calculate ouput shape from layer's input shape
         """
-        self.output_shape = self.num_of_units
+        self.output_shape = (None, self.num_of_units)
 
     def update(self):
         """
         Update the layer's weight
         """
         pass
+
+    def to_object(self):
+        """
+        SAVING/LOADING PURPOSE
+        Convert self to json-like object (dictionary)
+        """
+        obj = {}
+        obj['layer_type'] = 'dense'
+        obj['data'] = {}
+        # Layer info
+        obj['data']['name'] = self.name
+        obj['data']['algorithm'] = self.algorithm
+        obj['data']['input_shape'] = self.input_shape
+        obj['data']['output_shape'] = self.output_shape
+        obj['data']['num_of_units'] = self.num_of_units
+        obj['data']['weights'] = self.weights.tolist()
+        return obj
+    
+    def from_object(self, object):
+        """
+        SAVING/LOADING PURPOSE
+        Convert json-like object (dictionary) to layer object
+        """
+        # Layer info
+        self.name = object['name']
+        self.algorithm = object['algorithm']
+        self.input_shape = tuple(object['input_shape'])
+        self.output_shape = tuple(object['output_shape'])
+        self.num_of_units = object['num_of_units']
+        self.weights = np.array(object['weights'])
+
 
 if __name__ == "__main__":
     dense_test = Dense(2)

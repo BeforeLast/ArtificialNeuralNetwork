@@ -80,6 +80,33 @@ was expected and {output.shape} was given')
         """
         pass
 
+    def to_object(self):
+        """
+        SAVING/LOADING PURPOSE
+        Convert self to json-like object (dictionary)
+        """
+        obj = {}
+        obj['layer_type'] = 'input'
+        obj['data'] = {}
+        
+        # Layer info
+        obj['data']['name'] = self.name
+        obj['data']['algorithm'] = self.algorithm
+        obj['data']['input_shape'] = self.input_shape
+        obj['data']['output_shape'] = self.output_shape
+        return obj
+    
+    def from_object(self, object):
+        """
+        SAVING/LOADING PURPOSE
+        Convert json-like object (dictionary) to layer object
+        """
+        # Layer info
+        self.name = object['name']
+        self.algorithm = object['algorithm']
+        self.input_shape = object['input_shape']
+        self.output_shape = object['output_shape']
+
 if __name__ == "__main__":
     input_test = InputLayer((28,28,3))
     input_test.compile()

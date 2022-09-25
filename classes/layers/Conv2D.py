@@ -1,7 +1,5 @@
 # Guide : https://www.tensorflow.org/api_docs/python/tf/keras/layers/Conv2D
 
-from tkinter import E
-from typing import Union, Tuple, List
 from classes.layers.Layer import Layer as BaseLayer
 from classes.misc.Function import conv2d_fpack, misc
 from scipy.signal import convolve
@@ -15,24 +13,24 @@ class Conv2D(BaseLayer):
     name:str = None
     input = None
     output = None
-    input_shape:Union[int, tuple, list] = None
-    output_shape:Union[int, tuple, list] = None
+    input_shape:tuple[None, int, int, int] = None
+    output_shape:tuple[None, int, int, int] = None
 
     # Convolution info
     num_of_filters:int = None
-    conv_kernel_size:Union[int, tuple, list] = None
+    conv_kernel_size:tuple[int, int] = None
     conv_padding_size:int = None
-    conv_stride:Union[int, tuple, list] = None
-    conv_filters:Tuple[List[np.ndarray], float] = None
-    conv_output_shape:Tuple[None, int, int, int] = None
+    conv_stride:tuple[int, int] = None
+    conv_filters:list[tuple[list[np.ndarray], float]] = None
+    conv_output_shape:tuple[None, int, int, int] = None
     conv_output:np.ndarray = None
 
     # Detector info
     algorithm:str = None
 
     # Pooling info
-    pool_kernel_size:Union[int, tuple, list] = None
-    pool_stride:Union[int, tuple, list] = None
+    pool_kernel_size:tuple[int, int] = None
+    pool_stride:tuple[int, int] = None
     pool_mode:str = None
     
     def __init__(self, 
@@ -68,7 +66,7 @@ than one")
             if conv_kernel_size[0] < 1 or conv_kernel_size[1] < 1:
                 raise ValueError("Kernel size value must be equal or greater \
 than one")
-            self.conv_kernel_size = conv_kernel_size
+            self.conv_kernel_size = tuple(conv_kernel_size)
         else:
             raise ValueError("Kernel size must be a single integer or a \
 tuple/list of two integers")
@@ -86,7 +84,7 @@ greater than one")
             if conv_stride[0] < 1 or conv_stride[1] < 1:
                 raise ValueError("Stride value must be equal or greater than \
 one")
-            self.conv_stride = conv_stride
+            self.conv_stride = tuple(conv_stride)
         else:
             raise ValueError("Stride must be a single integer or a tuple/list \
 of two integers")
@@ -120,7 +118,7 @@ than one")
             if pool_kernel_size[0] < 1 or pool_kernel_size[1] < 1:
                 raise ValueError("Kernel size value must be equal or greater \
 than one")
-            self.pool_kernel_size = pool_kernel_size
+            self.pool_kernel_size = tuple(pool_kernel_size)
         else:
             raise ValueError("Kernel size must be a single integer or a \
 tuple/list of two integers")
@@ -138,7 +136,7 @@ greater than one")
             if pool_stride[0] < 1 or pool_stride[1] < 1:
                 raise ValueError("Stride value must be equal or greater than \
 one")
-            self.pool_stride = pool_stride
+            self.pool_stride = tuple(pool_stride)
         else:
             raise ValueError("Stride must be a single integer or a tuple/list \
 of two integers")
@@ -152,16 +150,6 @@ of two integers")
         ## Misc configuration
         self.name = kwargs.get("name", "Conv2D")
 
-
-        # KERNELS INITIATION
-        self.conv_filters = []
-        ## Convolution kernels
-        for _ in range(self.num_of_filters):
-            self.conv_filters.append(
-                np.random.rand(*self.conv_kernel_size)
-            )
-        ## Pooling kernel
-        # NO NEED
 
     def calculate(self, input):
         """
@@ -337,17 +325,19 @@ of two integers")
         COMPILING PURPOSE
         Generate filters from current input_shape
         """
-        # Get number of input channel(s)
-        num_of_channels = self.input_shape[-1]
-        self.conv_filters = []
-        for filter in range(self.num_of_filters):
-            # Generate _ filter(s)
-            temp_filters = []
-            for channel in range(num_of_channels):
-                # Generate channel filter(s)
-                temp_filters.append(np.random.rand(*self.conv_kernel_size))
-            temp_bias = np.random.rand(1)[0]
-            self.conv_filters.append((temp_filters, temp_bias))
+        # Only generate if not generated yet
+        if self.conv_filters is None:
+            # Get number of input channel(s)
+            num_of_channels = self.input_shape[-1]
+            self.conv_filters = []
+            for filter in range(self.num_of_filters):
+                # Generate _ filter(s)
+                temp_filters = []
+                for channel in range(num_of_channels):
+                    # Generate channel filter(s)
+                    temp_filters.append(np.random.rand(*self.conv_kernel_size))
+                temp_bias = np.random.rand(1)[0]
+                self.conv_filters.append((temp_filters, temp_bias))
     
     # DONE : FIX OUTPUT SHAPE
     def calculate_output_shape(self):
@@ -379,6 +369,78 @@ of two integers")
         self.output_shape = (output_batch, output_y_dim, output_x_dim, output_channel)
         return self.output_shape
 
+    def to_object(self):
+        """
+        SAVING/LOADING PURPOSE
+        Convert self to json-like object (dictionary)
+        """
+        obj = {}
+        obj['layer_type'] = 'conv2d'
+        obj['data'] = {}
+        # Layer data
+        obj['data']['name'] = self.name
+        obj['data']['input_shape'] = self.input_shape
+        obj['data']['output_shape'] = self.output_shape
+
+        # Convolution data
+        obj['data']['num_of_filters'] = self.num_of_filters
+        obj['data']['conv_kernel_size'] = self.conv_kernel_size
+        obj['data']['conv_padding_size'] = self.conv_padding_size
+        obj['data']['conv_stride'] = self.conv_stride
+        temp_conv_filter = []
+        for kernels_bias_pair in self.conv_filters:
+            temp_conv_filter.append((
+                [kernel.tolist() for kernel in kernels_bias_pair[0]],
+                kernels_bias_pair[1]
+            ))
+        obj['data']['conv_filters'] = temp_conv_filter
+        obj['data']['conv_output_shape'] = self.conv_output_shape
+
+        # Detector data
+        obj['data']['algorithm'] = self.algorithm
+
+        # Pooling data
+        obj['data']['pool_kernel_size'] = self.pool_kernel_size
+        obj['data']['pool_stride'] = self.pool_stride
+        obj['data']['pool_mode'] = self.pool_mode
+        return obj
+        
+
+    def from_object(self, object):
+        """
+        SAVING/LOADING PURPOSE
+        Convert json-like object (dictionary) to layer object
+        """
+        # Layer data
+        self.name = object['name']
+        self.input_shape = tuple(object['input_shape']) \
+            if object['input_shape'] else None
+        self.output_shape = tuple(object['output_shape']) \
+            if object['output_shape'] else None
+
+        # Convolution data
+        self.num_of_filters = object['num_of_filters']
+        self.conv_kernel_size = tuple(object['conv_kernel_size'])
+        self.conv_padding_size = object['conv_padding_size']
+        self.conv_stride = tuple(object['conv_stride'])
+        self.conv_filters = []
+        for kernels_bias_pair in object['conv_filters']:
+            self.conv_filters.append((
+                [np.array(kernel) for kernel in kernels_bias_pair[0]],
+                kernels_bias_pair[1]
+            ))
+        self.conv_output_shape = tuple(object['conv_output_shape']) \
+            if object['conv_output_shape'] else None
+
+        # Detector data
+        self.algorithm = object['algorithm']
+
+        # Pooling data
+        self.pool_kernel_size = tuple(object['pool_kernel_size'])
+        self.pool_stride = tuple(object['pool_stride'])
+        self.pool_mode = object['pool_mode']
+    
+
 
 if __name__ == "__main__":
     # TEST
@@ -396,9 +458,6 @@ if __name__ == "__main__":
     ### Conv kernels
     print(c2d_layer_1.conv_filters)
     print(c2d_layer_2.conv_filters)
-    ### Pool kernel
-    print(c2d_layer_1.pool_kernel)
-    print(c2d_layer_2.pool_kernel)
     ## Compile
     c2d_test = Conv2D(
         2, (2,2),
