@@ -2,8 +2,9 @@
 
 from classes.layers.Layer import Layer as BaseLayer
 from classes.misc.Function import conv2d_fpack, misc
-from scipy.signal import convolve
+from scipy.signal import fftconvolve
 import numpy as np
+from numpy.lib.stride_tricks import sliding_window_view
 
 class Conv2D(BaseLayer):
     """
@@ -191,36 +192,12 @@ of two integers")
                     temp_channel_data, self.conv_padding_size,
                     mode='constant', constant_values=0)
                 # Convolve process
-                temp_single_output = []
-                for y in range(0,
-                    temp_channel_data.shape[0], self.conv_stride[0]):
-                    temp_row = []
-                    for x in range(0,
-                        temp_channel_data.shape[1], self.conv_stride[1]):
-                        # Get receptive field
-                        receptive_field = temp_channel_data[
-                            y:y+self.conv_kernel_size[0],
-                            x:x+self.conv_kernel_size[1]]
-                        if receptive_field.shape != self.conv_kernel_size:
-                            # Skip if receptive field is not the same
-                            # shape as kernel
-                            continue
-                        else:
-                            # Convolve and sum
-                            temp_row.append(
-                                np.sum(
-                                    convolve(
-                                    receptive_field,
-                                    filters[channel],
-                                    mode='same')))
-                    if len(temp_row):
-                        # Add row to single channel output
-                        temp_single_output.append(temp_row)
-                    else:
-                        # Stop stride convolution if row empty
-                        break
-                # Convert channel convolve to np ndarray
-                temp_single_output = np.array(temp_single_output)
+                temp_single_output = fftconvolve(
+                    temp_channel_data, filters[channel], mode='valid')
+                # Stride process
+                temp_single_output = temp_single_output[
+                    ::self.conv_stride[0],
+                    ::self.conv_stride[1]]
                 # Sum channel output to single output
                 single_filter_output += temp_single_output
             # Add bias to sum of channel(s) output
@@ -275,29 +252,25 @@ of two integers")
         # Pooling process
         pool_result = None
         for channel in range(input.shape[-1]):
-            temp = []
-            for y in range(0, pool_input_shape[0], self.pool_stride[0]):
+            channel_data = input[:,:,channel]
+            temp_result = []
+            # Separate receptive field
+            for row in sliding_window_view(channel_data, self.pool_kernel_size):
                 temp_row = []
-                for x in range(0, pool_input_shape[1], self.pool_stride[1]):
-                    receptive_field = input[
-                        y:y+self.pool_kernel_size[0],
-                        x:x+self.pool_kernel_size[1],
-                        channel]
-                    if receptive_field.shape != self.pool_kernel_size:
-                        # continue if receptive field does not have shape of
-                        # pool's kernel size
-                        continue
-                    temp_row.append(pool_mode_function(receptive_field))
-                if len(temp_row) > 0:
-                    # skip pool result for the row if the row is empty due to
-                    # the difference in size of receptive field and kernel
-                    temp.append(temp_row)
+                for column in row:
+                    temp_row.append(pool_mode_function(column))
+                temp_result.append(temp_row)
+            # Convert result to np array
+            temp_result = np.array(temp_result)
+            # Apply stride
+            temp_result[::self.pool_stride[0],::self.pool_stride[1]]
+            # Stack result
             if pool_result is None:
                 # Instantiate pool result with first channel pool
-                pool_result = np.array(temp)
+                pool_result = temp_result
             else:
                 # Stack another channel pooling to previous stack
-                pool_result = np.dstack((pool_result, np.array(temp)))
+                pool_result = np.dstack((pool_result, temp_result))
         return pool_result
     
     # ANCHOR : COMPILING
