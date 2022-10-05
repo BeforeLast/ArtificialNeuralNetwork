@@ -1,5 +1,6 @@
 import json
-from typing import Union
+from typing import Type, Union
+from classes.layers.Dense import Dense
 
 from classes.layers.Layer import Layer
 import numpy as np
@@ -78,12 +79,16 @@ class Sequential():
 
                     # Backward
                     for k in range(len(self.layers)-1, -1, -1):
-                        if (k < len(self.layers) - 1):
-                            # Hidden layer
-                            self.layers[k].backward(self.layers[i+1], None)
+                        if (type(layer) is Dense):
+                            if (k < len(self.layers) - 1):
+                                # Hidden layer
+                                self.layers[k].backward(self.layers[k+1], None)
+                            else :
+                                # Output layer
+                                self.layers[k].backward(None, curr_label)
                         else :
-                            # Output layer
-                            self.layers[k].backward(None, curr_label)
+                            # Conv2D Backward
+                            pass
 
                 # Update Weight
                 for j in range(len(self.layers)-1, -1, -1):
