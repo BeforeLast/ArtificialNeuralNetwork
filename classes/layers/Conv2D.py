@@ -16,6 +16,8 @@ class Conv2D(BaseLayer):
     output = None
     input_shape:tuple[None, int, int, int] = None
     output_shape:tuple[None, int, int, int] = None
+    deltas = None
+    weights = None
 
     # Convolution info
     num_of_filters:int = None
