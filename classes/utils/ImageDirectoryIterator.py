@@ -24,6 +24,7 @@ class ImageDirectoryIterator():
     # sample:
     # ["cat", "dog"]
     label_mode:str = None
+    color_mode:str = None
 
     # IMAGE AUGMENTATION
     target_size:Tuple[int,int] = None
@@ -53,10 +54,16 @@ class ImageDirectoryIterator():
         self.label_mode = label_mode
         self.color_mode = color_mode
         self.target_size = target_size
+        self.directory_data = {}
+        self.shuffle_data_label = []
+        self.current_idx = None
+        self.labels_decoding = {}
+        self.labels_encoding = {}
 
     def shuffle(self):
         # Converting from directory data to list of object consisting of label
         # and data
+        self.shuffle_data_label = []
         for label in self.directory_data:
             for data in self.directory_data[label]:
                 self.shuffle_data_label.append(

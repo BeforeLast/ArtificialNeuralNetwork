@@ -39,7 +39,7 @@ class ImageConvert():
     # Get labels
     labels = [label for label in os.listdir(directory)
       if os.path.join(directory, label)]
-    self.labels = labels
+    image_di.labels = labels.copy()
 
     # Create labels encoding and decoding
     for idx in range(len(labels)):
