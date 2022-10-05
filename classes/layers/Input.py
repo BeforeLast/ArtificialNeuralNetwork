@@ -37,7 +37,7 @@ class InputLayer(BaseLayer):
 shape')
         self.name = kwargs.get("name", "InputLayer")
 
-    def calculate(self, input) -> np.ndarray:
+    def calculate(self, input):
         """
         Check if input is the same as input_shape or not to prevent data shape
         mismatch through the model and convert input to np.ndarray
@@ -73,7 +73,14 @@ was expected and {output.shape} was given')
         # Match output shape with input shape
         self.output_shape = self.input_shape
 
-    def update(self):
+    def backward(self, next_layer = None, target = None):
+        """
+        ! IGNORE !
+        Does not exist for this layer
+        """
+        pass
+
+    def update(self, learning_rate):
         """
         ! IGNORE !
         Does not exist for this layer

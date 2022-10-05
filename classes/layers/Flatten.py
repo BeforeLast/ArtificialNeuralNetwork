@@ -52,7 +52,14 @@ class Flatten(BaseLayer):
         """
         self.output_shape = (None, np.prod(self.input_shape[1:]).item())
 
-    def update(self):
+    def backward(self, next_layer = None, target = None):
+        """
+        ! IGNORE !
+        Does not exist for this layer
+        """
+        pass
+
+    def update(self, learning_rate):
         """
         ! IGNORE !
         Does not exist for this layer

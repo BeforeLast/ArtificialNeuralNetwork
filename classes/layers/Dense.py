@@ -2,7 +2,7 @@
 
 from typing import Optional, Union
 from classes.layers.Layer import Layer as BaseLayer
-from classes.misc.Function import dense_fpack
+from classes.misc.Function import dense_fpack, dense_fpack_deriv, dense_epack_deriv
 import numpy as np
 
 class Dense(BaseLayer):
@@ -13,11 +13,13 @@ class Dense(BaseLayer):
     name = None
     input = None
     output = None
+    output_deriv = None
     algorithm:str = None
     input_shape:tuple[None, int] = None
     output_shape:tuple[None, int] = None
     num_of_units:int = None
     weights:np.ndarray = None
+    deltas:np.ndarray = None
     
     def __init__(self, units, activation='relu', **kwargs):
         """
@@ -67,6 +69,9 @@ but {np.array(input).shape} shape was given.')
             # Apply activation function to dot product
             output = dense_fpack[self.algorithm](dot_prod)
             self.output = output.copy()
+            # Apply derivation
+            output_deriv = dense_fpack_deriv[self.algorithm](dot_prod)
+            self.output_deriv = output_deriv.copy()
             return output
 
     # ANCHOR : COMPILING
@@ -99,10 +104,11 @@ but {np.array(input).shape} shape was given.')
         """
         # Only generate weight if it is not generated yet
         if self.weights is None:
-            self.weights = np.random.rand(
-                self.input_shape[-1] + 1,
-                self.num_of_units
-            )
+            self.weights = np.ones((self.input_shape[-1] + 1, self.num_of_units))
+            # self.weights = np.random.rand(
+            #     self.input_shape[-1] + 1,
+            #     self.num_of_units
+            # )
 
     def calculate_output_shape(self):
         """
@@ -111,11 +117,28 @@ but {np.array(input).shape} shape was given.')
         """
         self.output_shape = (None, self.num_of_units)
 
-    def update(self):
+    def backward(self, next_layer = None, target = None):
+        """
+        Update the layer's delta (perform back propagation)
+        """
+        # Update deltas
+        if (target == None):
+            # Hidden layer
+            next_delta = np.dot(next_layer.deltas, next_layer.weights[1:].T)
+            self.deltas = self.output_deriv * next_delta
+            pass
+        else :
+            # Output layer
+            errors = dense_epack_deriv[self.algorithm](target, self.output)
+            self.deltas = self.output_deriv * errors
+
+    def update(self, learning_rate):
         """
         Update the layer's weight
         """
-        pass
+        # Update weights
+        delta_weight = np.dot(self.output, self.deltas) * learning_rate
+        self.weights = self.weights + delta_weight
 
     def to_object(self):
         """

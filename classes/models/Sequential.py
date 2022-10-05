@@ -55,12 +55,46 @@ class Sequential():
         # Save compiled state
         self.compiled = True
 
-    def fit(self, data, label):
+    def fit(self, data, batch_size, epochs, learning_rate, verbose = False):
         """
         ! FOR MILESTONE 2 !
         Train the model from the given data and label
         """
-        pass
+
+        if type(data) is ImageDirectoryIterator:
+            for i in range(epochs):
+                batch_index = 0
+                while batch_index < len(data):
+                    for j in range(min(batch_size, len(data))):
+                        step = next(data)
+
+                        # Forward
+                        curr_input = step['data']
+                        for layer in self.layers:
+                            output = layer.calculate(curr_input)
+                            curr_input = output
+
+                        # Backward
+                        for i in range(len(self.layers)-1, -1, -1):
+                            if (i < len(self.layers) - 1):
+                                # Hidden layer
+                                self.layers[i].backward(self.layers[i+1], None)
+                            else :
+                                # Output layer
+                                self.layers[i].backward(None, step['label'])
+
+                        # Update Weight
+                        for i in range(len(self.layers)-1, -1, -1):
+                            self.layers[i].update(learning_rate)
+                    
+                    batch_index += batch_size
+                    self.loss = 0 # TODO
+
+                if (verbose) :
+                    print("epoch : {}, loss : {}".format(i + 1, self.loss))
+
+        
+                
 
     def predict(self, data):
         """

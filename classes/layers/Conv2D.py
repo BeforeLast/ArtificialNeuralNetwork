@@ -163,7 +163,14 @@ of two integers")
         self.output = pool_res.copy()
         return pool_res
 
-    def update(self):
+    def backward(self, next_layer = None, target = None):
+        """
+        ! IGNORE !
+        Does not exist for this layer
+        """
+        pass
+
+    def update(self, learning_rate):
         """
         Update the layers' weight
         """
