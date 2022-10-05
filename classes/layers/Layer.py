@@ -63,10 +63,18 @@ class Layer(ABC):
         Also saves input and output to class properties
         """
         pass
+
+    @classmethod
+    @abstractmethod
+    def backward(self, next_layer = None, target = None):
+        """
+        Perform Backward Propagation
+        """
+        pass
     
     @classmethod
     @abstractmethod
-    def update(self):
+    def update(self, learning_rate):
         """
         Update weights from the calculated error-term
         """
