@@ -3,6 +3,17 @@ import numpy as np
 conv2d_fpack = {
     'relu': lambda x: np.maximum(0, x),
 }
+conv2d_fpack_deriv = {
+    'relu': lambda x: (x > 0).astype(int),
+}
+
+## CONV2D ERROR PACK
+conv2d_epack = {
+    'relu': lambda y, t: np.square(t - y),
+}
+conv2d_epack_deriv = {
+    'relu': lambda y, t: (t - y),
+}
 
 ## DENSE FUNCTION PACK
 dense_fpack = {

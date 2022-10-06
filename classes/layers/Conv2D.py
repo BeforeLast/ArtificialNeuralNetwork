@@ -13,7 +13,7 @@ class Conv2D(BaseLayer):
     # Layer info
     name:str = None
     input = None
-    output = None
+    output:np.ndarray = None
     input_shape:tuple[None, int, int, int] = None
     output_shape:tuple[None, int, int, int] = None
 
@@ -28,11 +28,16 @@ class Conv2D(BaseLayer):
 
     # Detector info
     algorithm:str = None
+    detector_output:np.ndarray = None
 
     # Pooling info
     pool_kernel_size:tuple[int, int] = None
     pool_stride:tuple[int, int] = None
-    pool_mode:str = None
+    
+    # Deltas
+    deltas:list[tuple[list[np.ndarray], float]] = None
+    delta_pools = None
+    delta_detectors = None
     
     def __init__(self, 
             filters, conv_kernel_size,              # Conv configuration
@@ -165,16 +170,54 @@ of two integers")
 
     def backward(self, next_layer = None, target = None):
         """
-        ! IGNORE !
-        Does not exist for this layer
-        """
-        pass
+        Update the layer's delta (perform back propagation)
+        """ 
+        self.delta_pools = []
+        self.delta_detectors = []
+        self.deltas = []
+        for i in range(len(self.conv_filters)):
+            # Gradient in pooling
+            if self.pool_mode in ["max", "maximum"]:
+                delta_pool = np.zeros(self.conv_output_shape[-3:-1])
+                for j in range(0, self.conv_output_shape[-3], self.pool_stride[0]):
+                    for k in range(0, self.conv_output_shape[-2], self.pool_stride[1]):
+                        window = self.conv_output[j:j + self.pool_kernel_size[0], k:k + self.pool_kernel_size[1], i]
+                        max_el = np.amax(window)
+                        bool_window = (window == max_el).astype(int)
+                        delta_pool[j:j + self.pool_kernel_size[0], k:k + self.pool_kernel_size[1]] = bool_window
+                self.delta_pools.append(delta_pool)
+            elif self.pool_mode in ["avg", "average"]:
+                delta_pool = np.full(self.conv_output_shape[-3:-1], np.mean(self.detector_output[i]))
+                self.delta_pools.append(delta_pool)
+                
+            # Gradient in detector (relu)
+            delta_detector = (self.conv_output[:,:,i] > 0).astype(int)
+            self.delta_detectors.append(delta_detector)            
+            
+            delta = self.delta_detectors[i].T @ self.delta_pools[i]
+
+            # TODO: Combine gradient from relu, maxpool, next gradient, and input            
+            # if next_layer:
+            #     for next_delta in next_layer.deltas:
+                    
+            
+            self.deltas.append(delta)
+            
+            # next_error = next_layer.deltas[:,:,i]
+            # next_weight = next_layer.conv
+            
 
     def update(self, learning_rate):
         """
         Update the layers' weight
         """
-        pass
+        # Update filter weight
+        for i in range(len(self.conv_filters)):
+            delta_weight = np.dot(self.conv_filters[i][0], self.deltas[i][0]) * learning_rate
+            delta_bias = self.conv_filters[i][1] * self.deltas[i][1] * learning_rate
+            self.conv_filters[i][0] = self.conv_filters[i][0] + delta_weight
+            self.conv_filters[i][1] = self.conv_filters[i][1] + delta_bias
+            
     
     # DONE : FIX CONVOLVE
     def convolve(self, input):
@@ -227,6 +270,7 @@ of two integers")
         # Detetor process
         detector_result = []
         detector_result = conv2d_fpack['relu'](input)
+        self.detector_output = detector_result.copy()
         return detector_result
         
     # DONE : FIX POOLING
