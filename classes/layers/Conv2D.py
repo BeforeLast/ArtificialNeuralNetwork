@@ -1,5 +1,6 @@
 # Guide : https://www.tensorflow.org/api_docs/python/tf/keras/layers/Conv2D
 
+from operator import index
 from classes.layers.Layer import Layer as BaseLayer
 from classes.misc.Function import conv2d_fpack, misc
 from scipy.signal import fftconvolve
@@ -35,7 +36,8 @@ class Conv2D(BaseLayer):
     pool_stride:tuple[int, int] = None
     
     # Deltas
-    deltas:list[tuple[list[np.ndarray], float]] = None
+    deltas_wrt_filters:list[tuple[list[np.ndarray], float]] = None
+    deltas_wrt_inputs:np.ndarray = None
     delta_pools = None
     delta_detectors = None
     
@@ -174,8 +176,9 @@ of two integers")
         """ 
         self.delta_pools = []
         self.delta_detectors = []
-        self.deltas = []
-        for i in range(len(self.conv_filters)):
+        self.deltas_wrt_filters = []
+        self.deltas_wrt_inputs = [np.zeros(self.input_shape[-3:-1])]
+        for i in range(self.num_of_filters):
             # Gradient in pooling
             if self.pool_mode in ["max", "maximum"]:
                 delta_pool = np.zeros(self.conv_output_shape[-3:-1])
@@ -196,28 +199,30 @@ of two integers")
             
             delta = self.delta_detectors[i].T @ self.delta_pools[i]
 
-            # TODO: Combine gradient from relu, maxpool, next gradient, and input            
-            # if next_layer:
-            #     for next_delta in next_layer.deltas:
-                    
-            
-            self.deltas.append(delta)
-            
-            # next_error = next_layer.deltas[:,:,i]
-            # next_weight = next_layer.conv
-            
+            curr_deltas_wrt_inputs = [np.zeros(self.input_shape[-3:-1])]                    
+            curr_deltas_wrt_filters = []
+            next_layer_delta = next_layer.deltas_wrt_inputs[i]
+            for channel_idx in range(self.input_shape[-1]):
+                curr_deltas_wrt_output = delta[channel_idx].T @ next_layer_delta
+                curr_deltas_wrt_filter = fftconvolve(
+                    input[:,:,j], curr_deltas_wrt_output, mode='valid'
+                )
+                curr_deltas_wrt_inputs = fftconvolve(
+                    np.rot90(self.conv_filters[i][0][channel_idx], 2), curr_deltas_wrt_output, mode='full'
+                )
+                curr_deltas_wrt_filters.append(curr_deltas_wrt_filter)
+                self.deltas_wrt_inputs[channel_idx] = self.deltas_wrt_inputs[channel_idx] + curr_deltas_wrt_inputs
+            self.deltas_wrt_filters.append(curr_deltas_wrt_filters)
 
     def update(self, learning_rate):
         """
         Update the layers' weight
         """
         # Update filter weight
-        for i in range(len(self.conv_filters)):
-            delta_weight = np.dot(self.conv_filters[i][0], self.deltas[i][0]) * learning_rate
-            delta_bias = self.conv_filters[i][1] * self.deltas[i][1] * learning_rate
-            self.conv_filters[i][0] = self.conv_filters[i][0] + delta_weight
-            self.conv_filters[i][1] = self.conv_filters[i][1] + delta_bias
-            
+        for i in range(self.num_of_filters):
+            for channel_idx in range(self.input_shape[-1]):
+                delta_weight = self.deltas_wrt_filters * learning_rate
+                self.conv_filters[i][0][channel_idx] = self.conv_filters[i][0][channel_idx] + delta_weight            
     
     # DONE : FIX CONVOLVE
     def convolve(self, input):
