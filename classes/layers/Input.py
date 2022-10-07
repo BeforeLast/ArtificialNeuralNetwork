@@ -111,8 +111,8 @@ was expected and {output.shape} was given')
         # Layer info
         self.name = object['name']
         self.algorithm = object['algorithm']
-        self.input_shape = object['input_shape']
-        self.output_shape = object['output_shape']
+        self.input_shape = tuple(object['input_shape'])
+        self.output_shape = tuple(object['output_shape'])
 
 if __name__ == "__main__":
     input_test = InputLayer((28,28,3))
