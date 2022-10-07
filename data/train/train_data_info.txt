@@ -1,2 +1,2 @@
-cats image(s): 0
-dogs image(s): 0
+cats image(s): 90
+dogs image(s): 91
