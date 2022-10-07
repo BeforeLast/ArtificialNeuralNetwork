@@ -22,7 +22,6 @@ class Sequential():
 
     # Training info
     optimizer:str = None
-    loss:str = None
     metrics:Union[List[str], str] = None
 
     ## METHODS
@@ -79,26 +78,21 @@ class Sequential():
 
                     # Backward
                     for k in range(len(self.layers)-1, -1, -1):
-                        if (type(layer) is Dense):
+                        if (type(self.layers[k]) is Dense):
+                            # Dense Layer backward
                             if (k < len(self.layers) - 1):
                                 # Hidden layer
                                 self.layers[k].backward(self.layers[k+1], None)
                             else :
                                 # Output layer
                                 self.layers[k].backward(None, curr_label)
-                        else :
-                            # Conv2D Backward
-                            pass
 
                 # Update Weight
                 for j in range(len(self.layers)-1, -1, -1):
-                    self.layers[j].update(learning_rate)
+                    if (type(self.layers[k]) is Dense):
+                        self.layers[j].update(learning_rate)
                 
                 batch_index += batch_size
-                self.loss = 0 # TODO
-
-            if (verbose) :
-                print("epoch : {}, loss : {}".format(i + 1, self.loss))
 
 
     def predict(self, data):

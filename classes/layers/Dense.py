@@ -19,7 +19,7 @@ class Dense(BaseLayer):
     output_shape:tuple[None, int] = None
     num_of_units:int = None
     weights:np.ndarray = None
-    deltas:np.ndarray = None
+    deltas_wrt_inputs:np.ndarray = None
     
     def __init__(self, units, activation='relu', **kwargs):
         """
@@ -124,21 +124,21 @@ but {np.array(input).shape} shape was given.')
         # Update deltas
         if (target == None):
             # Hidden layer
-            next_delta = np.dot(next_layer.deltas, next_layer.weights[1:].T)
-            self.deltas = self.output_deriv * next_delta
+            next_delta = np.dot(next_layer.deltas_wrt_inputs, next_layer.weights[1:].T)
+            self.deltas_wrt_inputs = self.output_deriv * next_delta
             pass
         else :
             # Output layer
             errors = dense_epack_deriv[self.algorithm](target, self.output)
-            self.deltas = self.output_deriv * errors
+            self.deltas_wrt_inputs = self.output_deriv * errors
 
     def update(self, learning_rate):
         """
         Update the layer's weight
         """
         # Update weights
-        delta_weight = np.dot(self.output, self.deltas) * learning_rate
-        self.weights = self.weights + delta_weight
+        delta_weight = np.dot(self.output, self.deltas_wrt_inputs) * learning_rate
+        self.weights = self.weights - delta_weight
 
     def to_object(self):
         """

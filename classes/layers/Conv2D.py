@@ -1,6 +1,7 @@
 # Guide : https://www.tensorflow.org/api_docs/python/tf/keras/layers/Conv2D
 
 from operator import index
+from classes.layers.Dense import Dense
 from classes.layers.Layer import Layer as BaseLayer
 from classes.misc.Function import conv2d_fpack, misc
 from scipy.signal import fftconvolve
@@ -201,18 +202,44 @@ of two integers")
 
             curr_deltas_wrt_inputs = [np.zeros(self.input_shape[-3:-1])]                    
             curr_deltas_wrt_filters = []
-            next_layer_delta = next_layer.deltas_wrt_inputs[i]
+
+            next_layer_delta = None
+            if (type(next_layer) is Conv2D) :
+                # Next layer is conv
+                next_layer_delta = next_layer.deltas_wrt_inputs[i]
+            else :
+                # Next layer is dense
+                next_layer_delta = []
+
+                for weight in next_layer.weights:
+                    curr = np.dot(next_layer.deltas_wrt_inputs, weight)
+                    next_layer_delta.append(curr)
+            
             for channel_idx in range(self.input_shape[-1]):
-                curr_deltas_wrt_output = delta[channel_idx].T @ next_layer_delta
-                curr_deltas_wrt_filter = fftconvolve(
-                    input[:,:,j], curr_deltas_wrt_output, mode='valid'
-                )
-                curr_deltas_wrt_inputs = fftconvolve(
-                    np.rot90(self.conv_filters[i][0][channel_idx], 2), curr_deltas_wrt_output, mode='full'
-                )
-                curr_deltas_wrt_filters.append(curr_deltas_wrt_filter)
-                self.deltas_wrt_inputs[channel_idx] = self.deltas_wrt_inputs[channel_idx] + curr_deltas_wrt_inputs
+                if (type(next_layer) is Conv2D):
+                    # Next layer is conv
+                    curr_deltas_wrt_output = delta[channel_idx].T @ next_layer_delta
+                    curr_deltas_wrt_filter = fftconvolve(
+                        input[:,:,j], curr_deltas_wrt_output, mode='valid'
+                    )
+                    curr_deltas_wrt_inputs = fftconvolve(
+                        np.rot90(self.conv_filters[i][0][channel_idx], 2), curr_deltas_wrt_output, mode='full'
+                    )
+                    curr_deltas_wrt_filters.append(curr_deltas_wrt_filter)
+
+                    self.deltas_wrt_inputs[channel_idx] = self.deltas_wrt_inputs[channel_idx] + curr_deltas_wrt_inputs
+                else :
+                    # Next layer is dense
+                    delta_cross_input = []
+                    for idx, delta in enumerate(next_layer_delta):
+                        curr = [delta * next_layer.output[idx-1]]
+                        delta_cross_input.append(curr)
+
+                    curr_deltas_wrt_filters.append(delta_cross_input)
+
             self.deltas_wrt_filters.append(curr_deltas_wrt_filters)
+
+        self.deltas_wrt_filters = np.asarray(self.deltas_wrt_filters)
 
     def update(self, learning_rate):
         """
@@ -221,8 +248,8 @@ of two integers")
         # Update filter weight
         for i in range(self.num_of_filters):
             for channel_idx in range(self.input_shape[-1]):
-                delta_weight = self.deltas_wrt_filters * learning_rate
-                self.conv_filters[i][0][channel_idx] = self.conv_filters[i][0][channel_idx] + delta_weight            
+                delta_weight = self.deltas_wrt_filters[i][channel_idx] * learning_rate
+                self.conv_filters[i][0][channel_idx] = self.conv_filters[i][0][channel_idx] - delta_weight            
     
     # DONE : FIX CONVOLVE
     def convolve(self, input):

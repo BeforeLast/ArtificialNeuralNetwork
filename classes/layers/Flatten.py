@@ -15,6 +15,8 @@ class Flatten(BaseLayer):
     algorithm:str = None
     input_shape:tuple = None
     output_shape:tuple[None, int] = None
+    weights:np.ndarray = None 
+    deltas_wrt_inputs:np.ndarray = None
     
     def __init__(self, **kwargs):
         """
@@ -27,6 +29,7 @@ class Flatten(BaseLayer):
         """
         Convert multi-dimensional input tensors into a single dimension
         """
+        self.output = input.flatten()
         return input.flatten()
 
     def compile(self, input_shape):
@@ -57,7 +60,8 @@ class Flatten(BaseLayer):
         ! IGNORE !
         Does not exist for this layer
         """
-        pass
+        self.weights = next_layer.weights
+        self.deltas_wrt_inputs = next_layer.deltas_wrt_inputs
 
     def update(self, learning_rate):
         """
