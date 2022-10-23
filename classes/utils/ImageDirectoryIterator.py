@@ -80,6 +80,8 @@ class ImageDirectoryIterator():
     
     def __next__(self):
         if self.current_idx is None:
+            # reshuffle data
+            self.shuffle()
             # stop is current_idx is none (reached the end or not started yet)
             return
         # open image 
