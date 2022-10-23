@@ -5,8 +5,9 @@ from classes.layers.Dense import Dense
 from classes.layers.Layer import Layer
 import numpy as np
 from typing import List
-from classes.misc.Class import layerinit_cpack
+from classes.misc.Class import layerinit_cpack, lossinit_cpack
 from classes.utils.ImageDirectoryIterator import ImageDirectoryIterator
+from classes.losses.Losses import Losses
 
 class Sequential():
     """
@@ -22,7 +23,11 @@ class Sequential():
 
     # Training info
     optimizer:str = None
+    loss:Losses = None
     metrics:Union[List[str], str] = None
+
+    # Prediction info
+    predict_history:dict[str, any]= None
 
     ## METHODS
     def __init__(self, layers:List[Layer], **kwargs):
@@ -31,6 +36,10 @@ class Sequential():
         """
         self.name = kwargs.get("name", "Sequential")
         self.layers = layers
+        self.predict_history = {}
+        self.optimizer = None
+        self.loss = None
+        self.metrics = None
 
     def compile(self, optimizer='sgd', loss='binary_crossentropy', metrics='accuracy'):
         """
@@ -45,12 +54,19 @@ class Sequential():
             raise AttributeError("Model does not have any layer")
         # Instantiate ouput shape chain
         output_shape_chain = None
+
         # Iterate and compile layers sequentially
         for layer in self.layers:
             layer.compile(output_shape_chain)
             output_shape_chain = layer.output_shape
         self.input_shape = self.layers[0].input_shape
         self.output_shape = self.layers[-1].input_shape
+
+        # Instantiate Loss
+        if isinstance(loss, Losses):
+            self.loss = loss
+        else:
+            self.loss = lossinit_cpack[loss.lower()]()
 
         # Save compiled state
         self.compiled = True
@@ -95,7 +111,7 @@ class Sequential():
                 batch_index += batch_size
 
 
-    def predict(self, data):
+    def predict(self, data, target=None):
         """
         Predict the labels from the given data
         """
@@ -116,7 +132,16 @@ class Sequential():
                 results.append(result)
                 step = next(data)
                 counter += 1
-                print(f"Step: {counter}/{data_len}")
+                # Print step
+                print(f"Step: {counter}/{data_len}", end=' | ' if counter==data_len else '\r')
+            # Reshape predictions and targets shape
+            results = np.array(results).reshape(-1,1)
+            true_labels = np.array(true_labels).reshape(-1,1)
+            # Calculate loss
+            self.predict_history['loss'] = self.loss.calculate(
+                true_labels, results)[0]
+            # Print loss
+            print(f"loss: {self.predict_history['loss']}")
             return {
                 'results':results,
                 'true_labels':true_labels

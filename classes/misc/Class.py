@@ -1,3 +1,4 @@
+## LAYER IMPORTS
 from classes.layers.Conv2D import Conv2D
 from classes.layers.Dense import Dense
 from classes.layers.Flatten import Flatten
@@ -44,4 +45,22 @@ layerinit_cpack = {
     'dense':dense_default,
     'flatten':flatten_default,
     'input':input_default
+}
+
+## LOSS IMPORTS
+from classes.losses.BinaryCrossentropy import BinaryCrossentropy
+
+## LOSS CLASS PACK
+loss_cpack = {
+    'binary_crossentropy': BinaryCrossentropy,
+}
+
+## LOSS DEFAULT CLASS INIT PACK
+def binary_crossentropy_default():
+    """Return default binary crossentropy loss class"""
+    return_class = BinaryCrossentropy()
+    return return_class
+
+lossinit_cpack = {
+    'binary_crossentropy':binary_crossentropy_default
 }
