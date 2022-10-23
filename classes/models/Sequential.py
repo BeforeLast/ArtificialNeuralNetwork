@@ -71,14 +71,17 @@ class Sequential():
         # Save compiled state
         self.compiled = True
 
-    def fit(self, data, label, batch_size, epochs, learning_rate, verbose = False):
+    def fit(self, data, label, batch_size, epochs, learning_rate, verbose = True):
         """
         ! FOR MILESTONE 2 !
         Train the model from the given data and label
         """
-
         for i in range(epochs):
+            print(f"Epochs {i+1}/{epochs}")
             batch_index = 0
+            print(f"Step: 0/{len(data)}",end='\r')
+            batch_iter = 1
+            batch_steps = len(data)//batch_size
             while batch_index < len(data):
                 batch_input = data[batch_index:min(batch_index + batch_size, len(data))]
                 batch_label = label[batch_index:min(batch_index + batch_size, len(label))]
@@ -109,6 +112,10 @@ class Sequential():
                         self.layers[j].update(learning_rate)
                 
                 batch_index += batch_size
+                batch_iter += 1
+                # Print process
+                print(f"Step: {batch_iter}/{batch_steps}",
+                    end='\n' if batch_index == batch_steps else '\r')
 
 
     def predict(self, data, target=None):
