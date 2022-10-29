@@ -104,11 +104,10 @@ but {np.array(input).shape} shape was given.')
         """
         # Only generate weight if it is not generated yet
         if self.weights is None:
-            self.weights = np.ones((self.input_shape[-1] + 1, self.num_of_units))
-            # self.weights = np.random.rand(
-            #     self.input_shape[-1] + 1,
-            #     self.num_of_units
-            # )
+            self.weights = np.random.rand(
+                self.input_shape[-1] + 1,
+                self.num_of_units
+            )
 
     def calculate_output_shape(self):
         """
