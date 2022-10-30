@@ -2,6 +2,7 @@
 
 from classes.layers.Layer import Layer as BaseLayer
 import numpy as np
+from classes.misc.Function import lstm_fpack
 
 class LSTM(BaseLayer):
     """
@@ -33,13 +34,25 @@ class LSTM(BaseLayer):
     b_cell:float = None
     b_output:float = None
 
-    # Connectivity
-    ht:np.array = None
-    ht_history:np.array = None
-    ct:np.array = None
+    # State & Gates
+    ## Forget Gate
+    ft:np.array = None                  # Forget gate output
+    ft_history:np.array = None
+    ## Input Gate
+    it:np.array = None                  # Input gate output
+    it_history:np.array = None
+    ctt:np.array = None                 # Candidate
+    ctt_history:np.array = None
+    # Cell State
+    ct:np.array = None                  # New cell state
     ct_history:np.array = None
+    # Output Gate
+    ot:np.array = None                  # Output gate output
+    ot_history:np.array = None
+    ht:np.array = None                  # Hidden state
+    ht_history:np.array = None
     
-    def __init__(self, units, activation='relu', return_sequences=False, **kwargs):
+    def __init__(self, units, activation='tanh', return_sequences=False, **kwargs):
         """
         Class constructor
         """
@@ -55,7 +68,7 @@ class LSTM(BaseLayer):
         # Activation algorithm
         if type(activation) is not str:
             raise TypeError('Activation algorithm must be a string')
-        elif activation.lower() not in ['relu', 'sigmoid']:
+        elif activation.lower() not in ['relu', 'sigmoid', 'tanh']:
             raise NotImplementedError('Activation algorithm is not supported')
         else:
             self.algorithm = activation.lower()
@@ -71,10 +84,80 @@ class LSTM(BaseLayer):
 
     def calculate(self, input):
         """
-        TODO
+        Calculate the given input tensor
         """
-        self.output = None
+        # Clear state and gates history
+        self.reset_state_and_gates()
+        if input.shape != self.input_shape[1:]:
+            # Check input shape
+            raise ValueError(f"Expected shape={self.input_shape}, \
+found shape={input.shape}")
+        for timestep in input:
+            # Forget Gate
+            ft = lstm_fpack['sigmoid'](
+                self.U_forget @ timestep.T
+                + self.W_forget @ self.ht
+                + self.b_forget)
+            self.ft = ft
+            self.ht_history = np.hstack((self.ht_history, ft))
+            
+            # Input Gate
+            it = lstm_fpack['sigmoid'](
+                self.U_input @ timestep.T
+                + self.W_input @ self.ht
+                + self.b_input)
+            self.it = it
+            self.it_history = np.hstack((self.it_history, it))
+            
+            ctt = lstm_fpack[self.algorithm](
+                self.U_cell @ timestep.T
+                + self.W_cell @ self.ht
+                + self.b_cell)
+            self.ctt = ctt
+            self.ctt_history = np.hstack((self.ctt_history, ctt))
+            # Cell State
+            ct = ft * self.ct + it * ctt
+            self.ct = ct
+            self.ct_history = np.hstack((self.ct_history, ct))
+
+            # Output Gate
+            ot = lstm_fpack['sigmoid'](
+                self.U_output @ timestep.T
+                + self.W_output @ self.ht
+                + self.b_output)
+            self.ot = ot
+            self.ot_history = np.hstack((self.ot_history, ot))
+
+            ht = ot * lstm_fpack[self.algorithm](ct)
+            self.ht = ht
+            self.ht_history = np.hstack((self.ht_history, ht))
+        
+        if self.return_sequences:
+            self.output = self.ht_history[input.shape[0]:]
+        else:
+            self.output = self.ht_history[-1]
         return self.output
+    
+    def reset_state_and_gates(self):
+        """
+        Clear state and gates to reset timestep calculations
+        """
+        ## Forget Gate
+        self.ft = np.zeros((self.num_of_units, 1))
+        self.ft_history = self.ft.copy()
+        ## Input Gate
+        self.it = np.zeros((self.num_of_units, 1))
+        self.it_history = self.it.copy()
+        self.ctt = np.zeros((self.num_of_units, 1))
+        self.ctt_history = self.ctt.copy()
+        # Cell State
+        self.ct = np.zeros((self.num_of_units, 1))
+        self.ct_history = self.ct.copy()
+        # Output Gate
+        self.ot = np.zeros((self.num_of_units, 1))
+        self.ot_history = self.ot.copy()
+        self.ht = np.zeros((self.num_of_units, 1))
+        self.ht_history = self.ht.copy()
 
     # ANCHOR : COMPILING
     def compile(self, input_shape):
@@ -112,7 +195,7 @@ class LSTM(BaseLayer):
     def generate_weights(self):
         """
         COMPILING PURPOSE
-        Generate weigths matrix from current input_shape
+        Generate weights matrix from current input_shape
         """
         # Only generate weight if it is not generated yet
         if self.U_forget is None:
