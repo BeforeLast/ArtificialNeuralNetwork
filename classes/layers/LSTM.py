@@ -133,9 +133,9 @@ found shape={input.shape}")
             self.ht_history = np.hstack((self.ht_history, ht))
         
         if self.return_sequences:
-            self.output = self.ht_history[input.shape[0]:]
+            self.output = self.ht_history[input.shape[:,1:]].T.copy()
         else:
-            self.output = self.ht_history[-1]
+            self.output = self.ht_history[:,-1].copy()
         return self.output
     
     def reset_state_and_gates(self):
@@ -234,7 +234,7 @@ found shape={input.shape}")
         if self.return_sequences:
             self.output_shape = (None, self.input_shape[-2], self.num_of_units)
         else:
-            self.output_shape = (None, self.num_of_units)
+            self.output_shape = (None, self.num_of_units)   
 
     def backward(self, next_layer = None, target = None):
         """
