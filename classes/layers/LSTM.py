@@ -252,7 +252,6 @@ found shape={input.shape}")
 
     def to_object(self):
         """
-        TODO
         SAVING/LOADING PURPOSE
         Convert self to json-like object (dictionary)
         """
@@ -265,11 +264,25 @@ found shape={input.shape}")
         obj['data']['algorithm'] = self.algorithm
         obj['data']['input_shape'] = self.input_shape
         obj['data']['output_shape'] = self.output_shape
+        obj['data']['return_sequences'] = self.return_sequences
+        obj['data']['num_of_units'] = self.num_of_units
+        obj['data']['U_forget'] = self.U_forget
+        obj['data']['U_input'] = self.U_input
+        obj['data']['U_cell'] = self.U_cell
+        obj['data']['U_output'] = self.U_output
+        obj['data']['W_forget'] = self.W_forget
+        obj['data']['W_input'] = self.W_input
+        obj['data']['W_cell'] = self.W_cell
+        obj['data']['W_output'] = self.W_output
+        obj['data']['b_forget'] = self.b_forget
+        obj['data']['b_input'] = self.b_input
+        obj['data']['b_cell'] = self.b_cell
+        obj['data']['b_output'] = self.b_output
+
         return obj
     
     def from_object(self, object):
         """
-        TODO
         SAVING/LOADING PURPOSE
         Convert json-like object (dictionary) to layer object
         """
@@ -278,6 +291,21 @@ found shape={input.shape}")
         self.algorithm = object['algorithm']
         self.input_shape = tuple(object['input_shape'])
         self.output_shape = tuple(object['output_shape'])
+        self.return_sequences = bool(object['return_sequences'])
+        self.num_of_units = object['num_of_units']
+        self.U_forget = np.array(object['U_forget'])
+        self.U_input = np.array(object['U_input'])
+        self.U_cell = np.array(object['U_cell'])
+        self.U_output = np.array(object['U_output'])
+        self.W_forget = np.array(object['W_forget'])
+        self.W_input = np.array(object['W_input'])
+        self.W_cell = np.array(object['W_cell'])
+        self.W_output = np.array(object['W_output'])
+        self.b_forget = np.array(object['b_forget'])
+        self.b_input = np.array(object['b_input'])
+        self.b_cell = np.array(object['b_cell'])
+        self.b_output = np.array(object['b_output'])
+        
 
 if __name__ == "__main__":
     pass
