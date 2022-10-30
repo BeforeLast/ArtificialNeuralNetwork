@@ -35,6 +35,13 @@ dense_epack_deriv = {
     'sigmoid': lambda y, t: (t - y)
 }
 
+## LSTM FUNCTION PACK
+lstm_fpack = {
+    'tanh': lambda x: np.tanh(x),
+    'relu': lambda x: np.maximum(0, x),
+    'sigmoid': lambda x: 1 / (1 + np.exp(-x))
+}
+
 ## MISC FUNCTION PACK
 misc = {
     'expected_output_dim_length':
