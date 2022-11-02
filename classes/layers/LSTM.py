@@ -52,6 +52,9 @@ class LSTM(BaseLayer):
     ht:np.array = None                  # Hidden state
     ht_history:np.array = None
     
+    # Number of parameters
+    num_params:int = None
+    
     def __init__(self, units, activation='tanh', return_sequences=False, **kwargs):
         """
         Class constructor
@@ -131,7 +134,7 @@ found shape={input.shape}")
             ht = ot * lstm_fpack[self.algorithm](ct)
             self.ht = ht
             self.ht_history = np.hstack((self.ht_history, ht))
-        
+                
         if self.return_sequences:
             self.output = self.ht_history[input.shape[:,1:]].T.copy()
         else:
@@ -187,6 +190,8 @@ found shape={input.shape}")
                     # None exist in first dimension of ndim=3
                     # convert input_shape to tuple
                     self.input_shape = tuple(input_shape)
+        # Update number of parameters
+        self.num_params = 4*(self.num_of_units*(self.input_shape[1] + self.num_of_units + 1))
         # Generate weights
         self.generate_weights()
         # Calculate output shape

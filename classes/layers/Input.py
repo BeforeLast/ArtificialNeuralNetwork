@@ -3,6 +3,7 @@
 from typing import Optional, Union
 from classes.layers.Layer import Layer as BaseLayer
 from classes.utils.ImageConvert import ImageConvert
+from math import prod
 import numpy as np
 
 class InputLayer(BaseLayer):
@@ -16,6 +17,7 @@ class InputLayer(BaseLayer):
     algorithm:str = None
     input_shape:Union[int, tuple, list] = None
     output_shape:Union[int, tuple, list] = None
+    num_params:int = None
     
     def __init__(self, input_shape, **kwargs):
         """
@@ -62,6 +64,11 @@ was expected and {output.shape} was given')
         COMPILING PURPOSE
         Compile layer with the given input shape
         """
+        # Update number of parameters
+        if self.input_shape[0] != None:
+            self.num_params = prod(self.input_shape)
+        else:
+            self.num_params = prod(self.input_shape[1:])
         # Calculate output shape
         self.calculate_output_shape()
 

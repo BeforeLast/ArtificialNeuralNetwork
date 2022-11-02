@@ -20,6 +20,7 @@ class Dense(BaseLayer):
     num_of_units:int = None
     weights:np.ndarray = None
     deltas_wrt_inputs:np.ndarray = None
+    num_params:int = None
     
     def __init__(self, units, activation='relu', **kwargs):
         """
@@ -92,6 +93,8 @@ but {np.array(input).shape} shape was given.')
             elif len(input_shape) == 1:
                 # Only input size is stated
                 self.input_shape = (None, input_shape[0])
+        # Update number of parameters
+        self.num_params = self.num_of_units * (self.input_shape[1] + 1)
         # Configure layer's class output_shape
         self.calculate_output_shape()
         # Instantiate weights

@@ -1,5 +1,6 @@
 import json
 from typing import Type, Union
+from tabulate import tabulate
 from classes.layers.Dense import Dense
 
 from classes.layers.Layer import Layer
@@ -224,7 +225,22 @@ class Sequential():
         """
         Return the summary (in the form of string) of the model
         """
-        pass
+        layer_infos = []
+        sum_params = 0
+        for layer in self.layers:
+            sum_params += layer.num_params
+            layer_infos.append(
+                [
+                    layer.name,
+                    type(layer).__name__,
+                    layer.output_shape,
+                    layer.num_params
+                ]
+            )
+        print(tabulate(layer_infos, headers=['Name', 'Type', 'Output Shape', 'Num of Params'], tablefmt="mixed_outline"))
+        print("Total params: ", sum_params)
+        print("Trainable params: ", sum_params)
+        print("Non-trainable params: ", 0)
 
     def get_layer(self, name=None, index=None) -> Layer:
         """
