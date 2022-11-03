@@ -17,12 +17,12 @@ class ImageConvert():
     Returns a 2D array with each elmt consists of image_data and its label
     """
     # Check target size
-    if type(target_size) not in [Tuple, List]:
+    if type(target_size) not in [tuple, list]:
       raise TypeError("Invalid type for target size")
     elif len(target_size) != 2:
       raise ValueError("Invalid target size format")
     else:
-      target_size = Tuple(target_size)
+      target_size = tuple(target_size)
     # Check color mode
     if color_mode.lower() not in ['rgb','grayscale','rgba']:
       raise NotImplementedError("Unsuported color mode, please use \
@@ -37,7 +37,7 @@ class ImageConvert():
       mode.lower(), color_mode.lower(), target_size)
     
     # Get labels
-    labels = [label for label in os.Listdir(directory)
+    labels = [label for label in os.listdir(directory)
       if os.path.join(directory, label)]
     image_di.labels = labels.copy()
 

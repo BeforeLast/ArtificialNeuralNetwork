@@ -1,8 +1,9 @@
 # Guide : https://www.tensorflow.org/api_docs/python/tf/keras/layers/InputLayer
 
-from typing import Optional, Union, Tuple, List
+from typing import Optional, Union
 from classes.layers.Layer import Layer as BaseLayer
 from classes.utils.ImageConvert import ImageConvert
+from math import prod
 import numpy as np
 
 class InputLayer(BaseLayer):
@@ -14,8 +15,8 @@ class InputLayer(BaseLayer):
     input = None
     output = None
     algorithm:str = None
-    input_shape:Union[int, Tuple, List] = None
-    output_shape:Union[int, Tuple, List] = None
+    input_shape:Union[int, tuple, list] = None
+    output_shape:Union[int, tuple, list] = None
     num_params:int = None
     
     def __init__(self, input_shape, **kwargs):
@@ -24,15 +25,15 @@ class InputLayer(BaseLayer):
         """
         if type(input_shape) is int:
             self.input_shape = (None, input_shape)
-        elif type(input_shape) in [List, Tuple, np.ndarray]:
+        elif type(input_shape) in [list, tuple, np.ndarray]:
             if input_shape[0] != None:
                 # Only state data dimension and channel
                 fix_shape = [None]
-                fix_shape.extend(List(input_shape))
-                self.input_shape = Tuple(fix_shape)
+                fix_shape.extend(list(input_shape))
+                self.input_shape = tuple(fix_shape)
             else:
                 # Batch input shape already stated (None)
-                self.input_shape = Tuple(input_shape)
+                self.input_shape = tuple(input_shape)
         else:
             raise TypeError(f'Type {type(input_shape)} cannot be used as input \
 shape')
@@ -44,7 +45,7 @@ shape')
         mismatch through the model and convert input to np.ndarray
         """
         # Check input type
-        if type(input) not in [List, Tuple, np.ndarray]:
+        if type(input) not in [list, tuple, np.ndarray]:
             raise TypeError(f"Unsuported input type for type {type(input)}")
         # Save input history
         self.input = input
@@ -63,8 +64,11 @@ was expected and {output.shape} was given')
         COMPILING PURPOSE
         Compile layer with the given input shape
         """
-        # Update number of parameters (Always 0)
-        self.num_params = 0
+        # Update number of parameters
+        if self.input_shape[0] != None:
+            self.num_params = prod(self.input_shape)
+        else:
+            self.num_params = prod(self.input_shape[1:])
         # Calculate output shape
         self.calculate_output_shape()
 
@@ -114,8 +118,8 @@ was expected and {output.shape} was given')
         # Layer info
         self.name = object['name']
         self.algorithm = object['algorithm']
-        self.input_shape = Tuple(object['input_shape'])
-        self.output_shape = Tuple(object['output_shape'])
+        self.input_shape = tuple(object['input_shape'])
+        self.output_shape = tuple(object['output_shape'])
 
 if __name__ == "__main__":
     input_test = InputLayer((28,28,3))

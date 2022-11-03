@@ -1,6 +1,6 @@
 # Guide : https://www.tensorflow.org/api_docs/python/tf/keras/layers/Dense
 
-from typing import Optional, Union, Tuple, List
+from typing import Optional, Union
 from classes.layers.Layer import Layer as BaseLayer
 from classes.misc.Function import dense_fpack, dense_fpack_deriv, dense_epack_deriv
 import numpy as np
@@ -15,8 +15,8 @@ class Dense(BaseLayer):
     output = None
     output_deriv = None
     algorithm:str = None
-    input_shape:Tuple[None, int] = None
-    output_shape:Tuple[None, int] = None
+    input_shape:tuple[None, int] = None
+    output_shape:tuple[None, int] = None
     num_of_units:int = None
     weights:np.ndarray = None
     deltas_wrt_inputs:np.ndarray = None
@@ -51,11 +51,11 @@ class Dense(BaseLayer):
         Calculate the given input tensor to given output
         """
         # Check input type
-        if type(input) is not List \
-            and type(input) is not Tuple \
+        if type(input) is not list \
+            and type(input) is not tuple \
             and type(input) is not np.ndarray:
-            # Input is not a List/Tuple/np.ndarray
-            raise TypeError('Input must be a List or a Tuple')
+            # Input is not a list/tuple/np.ndarray
+            raise TypeError('Input must be a list or a tuple')
         elif np.array(input).shape != self.input_shape[1:]:
             # Input shape mismatch
             raise ValueError(f'Expected {self.input_shape[1:]} shape \
@@ -85,11 +85,11 @@ but {np.array(input).shape} shape was given.')
         if type(input_shape) is int:
             # Only state data dimension
             self.input_shape = (None, input_shape)
-        elif type(input_shape) is Tuple or type(input_shape) is List:
-            # Input_shape is in a form of Tuple or List
+        elif type(input_shape) is tuple or type(input_shape) is list:
+            # Input_shape is in a form of tuple or list
             if len(input_shape) == 2:
                 # Batch (None) is stated and input size is stated
-                self.input_shape = Tuple(input_shape)
+                self.input_shape = tuple(input_shape)
             elif len(input_shape) == 1:
                 # Only input size is stated
                 self.input_shape = (None, input_shape[0])
@@ -156,7 +156,7 @@ but {np.array(input).shape} shape was given.')
         obj['data']['input_shape'] = self.input_shape
         obj['data']['output_shape'] = self.output_shape
         obj['data']['num_of_units'] = self.num_of_units
-        obj['data']['weights'] = self.weights.toList()
+        obj['data']['weights'] = self.weights.tolist()
         return obj
     
     def from_object(self, object):
@@ -167,8 +167,8 @@ but {np.array(input).shape} shape was given.')
         # Layer info
         self.name = object['name']
         self.algorithm = object['algorithm']
-        self.input_shape = Tuple(object['input_shape'])
-        self.output_shape = Tuple(object['output_shape'])
+        self.input_shape = tuple(object['input_shape'])
+        self.output_shape = tuple(object['output_shape'])
         self.num_of_units = object['num_of_units']
         self.weights = np.array(object['weights'])
 

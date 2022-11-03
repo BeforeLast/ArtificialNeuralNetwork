@@ -2,7 +2,7 @@ import json
 from typing import Type, Union
 from tabulate import tabulate
 from classes.layers.Dense import Dense
-from typing import Union, Tuple, List
+
 from classes.layers.Layer import Layer
 import numpy as np
 from typing import List
@@ -18,8 +18,8 @@ class Sequential():
     # Model info
     name:str = None
     layers:List[Layer] = None
-    input_shape:Tuple = None
-    output_shape:Tuple = None
+    input_shape:tuple = None
+    output_shape:tuple = None
     compiled:bool = False
 
     # Training info
@@ -154,7 +154,7 @@ class Sequential():
                 'results':results,
                 'true_labels':true_labels
             }
-        elif type(data) in [np.ndarray, List, Tuple]:
+        elif type(data) in [np.ndarray, list, tuple]:
             # Check data processing type (batch or not batch)
             data_check = np.array(data)
             if data_check.shape == self.input_shape[1:]:

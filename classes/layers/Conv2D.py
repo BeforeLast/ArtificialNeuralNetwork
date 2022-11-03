@@ -1,6 +1,5 @@
 # Guide : https://www.tensorflow.org/api_docs/python/tf/keras/layers/Conv2D
 
-from typing import Tuple, List
 from operator import index
 from classes.layers.Dense import Dense
 from classes.layers.Layer import Layer as BaseLayer
@@ -17,16 +16,16 @@ class Conv2D(BaseLayer):
     name:str = None
     input = None
     output:np.ndarray = None
-    input_shape:Tuple[None, int, int, int] = None
-    output_shape:Tuple[None, int, int, int] = None
+    input_shape:tuple[None, int, int, int] = None
+    output_shape:tuple[None, int, int, int] = None
 
     # Convolution info
     num_of_filters:int = None
-    conv_kernel_size:Tuple[int, int] = None
+    conv_kernel_size:tuple[int, int] = None
     conv_padding_size:int = None
-    conv_stride:Tuple[int, int] = None
-    conv_filters:List[Tuple[List[np.ndarray], float]] = None
-    conv_output_shape:Tuple[None, int, int, int] = None
+    conv_stride:tuple[int, int] = None
+    conv_filters:list[tuple[list[np.ndarray], float]] = None
+    conv_output_shape:tuple[None, int, int, int] = None
     conv_output:np.ndarray = None
 
     # Detector info
@@ -34,11 +33,11 @@ class Conv2D(BaseLayer):
     detector_output:np.ndarray = None
 
     # Pooling info
-    pool_kernel_size:Tuple[int, int] = None
-    pool_stride:Tuple[int, int] = None
+    pool_kernel_size:tuple[int, int] = None
+    pool_stride:tuple[int, int] = None
     
     # Deltas
-    deltas_wrt_filters:List[Tuple[List[np.ndarray], float]] = None
+    deltas_wrt_filters:list[tuple[list[np.ndarray], float]] = None
     deltas_wrt_inputs:np.ndarray = None
     delta_pools = None
     delta_detectors = None
@@ -68,35 +67,35 @@ greater than one")
                 raise ValueError("Kernel size value must be equal or greater \
 than one")
             self.conv_kernel_size = (conv_kernel_size, conv_kernel_size)
-        elif (type(conv_kernel_size) is Tuple           \
-                or type(conv_kernel_size) is List)      \
+        elif (type(conv_kernel_size) is tuple           \
+                or type(conv_kernel_size) is list)      \
                 and len(conv_kernel_size) == 2          \
                 and type(conv_kernel_size[0]) is int    \
                 and type(conv_kernel_size[1]) is int:
             if conv_kernel_size[0] < 1 or conv_kernel_size[1] < 1:
                 raise ValueError("Kernel size value must be equal or greater \
 than one")
-            self.conv_kernel_size = Tuple(conv_kernel_size)
+            self.conv_kernel_size = tuple(conv_kernel_size)
         else:
             raise ValueError("Kernel size must be a single integer or a \
-Tuple/List of two integers")
+tuple/list of two integers")
         ### Stride
         if type(conv_stride) is int:
             if conv_stride < 1:
                 raise ValueError("Stride value must be an integer equal or \
 greater than one")
             self.conv_stride = (conv_stride, conv_stride)
-        elif (type(conv_stride) is Tuple           \
-                or type(conv_stride) is List)      \
+        elif (type(conv_stride) is tuple           \
+                or type(conv_stride) is list)      \
                 and len(conv_stride) == 2          \
                 and type(conv_stride[0]) is int    \
                 and type(conv_stride[1]) is int:
             if conv_stride[0] < 1 or conv_stride[1] < 1:
                 raise ValueError("Stride value must be equal or greater than \
 one")
-            self.conv_stride = Tuple(conv_stride)
+            self.conv_stride = tuple(conv_stride)
         else:
-            raise ValueError("Stride must be a single integer or a Tuple/List \
+            raise ValueError("Stride must be a single integer or a tuple/list \
 of two integers")
         ### Padding
         if type(conv_padding_size) is not int \
@@ -120,35 +119,35 @@ greater than zero")
                 raise ValueError("Kernel size value must be equal or greater \
 than one")
             self.pool_kernel_size = (pool_kernel_size, pool_kernel_size)
-        elif (type(pool_kernel_size) is Tuple           \
-                or type(pool_kernel_size) is List)      \
+        elif (type(pool_kernel_size) is tuple           \
+                or type(pool_kernel_size) is list)      \
                 and len(pool_kernel_size) == 2          \
                 and type(pool_kernel_size[0]) is int    \
                 and type(pool_kernel_size[1]) is int:
             if pool_kernel_size[0] < 1 or pool_kernel_size[1] < 1:
                 raise ValueError("Kernel size value must be equal or greater \
 than one")
-            self.pool_kernel_size = Tuple(pool_kernel_size)
+            self.pool_kernel_size = tuple(pool_kernel_size)
         else:
             raise ValueError("Kernel size must be a single integer or a \
-Tuple/List of two integers")
+tuple/list of two integers")
         ### Pool stride size
         if type(pool_stride) is int:
             if pool_stride < 1:
                 raise ValueError("Stride value must be an integer equal or \
 greater than one")
             self.pool_stride = (pool_stride, pool_stride)
-        elif (type(pool_stride) is Tuple           \
-                or type(pool_stride) is List)      \
+        elif (type(pool_stride) is tuple           \
+                or type(pool_stride) is list)      \
                 and len(pool_stride) == 2          \
                 and type(pool_stride[0]) is int    \
                 and type(pool_stride[1]) is int:
             if pool_stride[0] < 1 or pool_stride[1] < 1:
                 raise ValueError("Stride value must be equal or greater than \
 one")
-            self.pool_stride = Tuple(pool_stride)
+            self.pool_stride = tuple(pool_stride)
         else:
-            raise ValueError("Stride must be a single integer or a Tuple/List \
+            raise ValueError("Stride must be a single integer or a tuple/list \
 of two integers")
         ### Pooling mode
         if type(pool_mode) is not str:
@@ -368,8 +367,8 @@ of two integers")
         if len(input_shape) == 3:
             # Only state data dimension and channel
             fix_shape = [None]
-            fix_shape.extend(List(input_shape))
-            self.input_shape = Tuple(fix_shape)
+            fix_shape.extend(list(input_shape))
+            self.input_shape = tuple(fix_shape)
         else:
             # Batch input shape already stated (None)
             self.input_shape = input_shape
@@ -447,7 +446,7 @@ of two integers")
         temp_conv_filter = []
         for kernels_bias_pair in self.conv_filters:
             temp_conv_filter.append((
-                [kernel.toList() for kernel in kernels_bias_pair[0]],
+                [kernel.tolist() for kernel in kernels_bias_pair[0]],
                 kernels_bias_pair[1]
             ))
         obj['data']['conv_filters'] = temp_conv_filter
@@ -470,31 +469,31 @@ of two integers")
         """
         # Layer data
         self.name = object['name']
-        self.input_shape = Tuple(object['input_shape']) \
+        self.input_shape = tuple(object['input_shape']) \
             if object['input_shape'] else None
-        self.output_shape = Tuple(object['output_shape']) \
+        self.output_shape = tuple(object['output_shape']) \
             if object['output_shape'] else None
 
         # Convolution data
         self.num_of_filters = object['num_of_filters']
-        self.conv_kernel_size = Tuple(object['conv_kernel_size'])
+        self.conv_kernel_size = tuple(object['conv_kernel_size'])
         self.conv_padding_size = object['conv_padding_size']
-        self.conv_stride = Tuple(object['conv_stride'])
+        self.conv_stride = tuple(object['conv_stride'])
         self.conv_filters = []
         for kernels_bias_pair in object['conv_filters']:
             self.conv_filters.append((
                 [np.array(kernel) for kernel in kernels_bias_pair[0]],
                 kernels_bias_pair[1]
             ))
-        self.conv_output_shape = Tuple(object['conv_output_shape']) \
+        self.conv_output_shape = tuple(object['conv_output_shape']) \
             if object['conv_output_shape'] else None
 
         # Detector data
         self.algorithm = object['algorithm']
 
         # Pooling data
-        self.pool_kernel_size = Tuple(object['pool_kernel_size'])
-        self.pool_stride = Tuple(object['pool_stride'])
+        self.pool_kernel_size = tuple(object['pool_kernel_size'])
+        self.pool_stride = tuple(object['pool_stride'])
         self.pool_mode = object['pool_mode']
     
 
