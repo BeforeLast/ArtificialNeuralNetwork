@@ -18,8 +18,8 @@ class Sequential():
     # Model info
     name:str = None
     layers:List[Layer] = None
-    input_shape:tuple = None
-    output_shape:tuple = None
+    input_shape:Tuple = None
+    output_shape:Tuple = None
     compiled:bool = False
 
     # Training info
@@ -154,7 +154,7 @@ class Sequential():
                 'results':results,
                 'true_labels':true_labels
             }
-        elif type(data) in [np.ndarray, list, tuple]:
+        elif type(data) in [np.ndarray, List, Tuple]:
             # Check data processing type (batch or not batch)
             data_check = np.array(data)
             if data_check.shape == self.input_shape[1:]:

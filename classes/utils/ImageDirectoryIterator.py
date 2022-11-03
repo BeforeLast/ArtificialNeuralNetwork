@@ -61,7 +61,7 @@ class ImageDirectoryIterator():
         self.labels_encoding = {}
 
     def shuffle(self):
-        # Converting from directory data to list of object consisting of label
+        # Converting from directory data to List of object consisting of label
         # and data
         self.shuffle_data_label = []
         for label in self.directory_data:

@@ -1,5 +1,6 @@
 # Guide : https://www.tensorflow.org/api_docs/python/tf/keras/layers/LSTM
 
+from typing import Optional, Union, Tuple, List
 from classes.layers.Layer import Layer as BaseLayer
 import numpy as np
 from classes.misc.Function import lstm_fpack
@@ -14,8 +15,8 @@ class LSTM(BaseLayer):
     output = None
     algorithm:str = None
     num_of_units:int = None
-    input_shape:tuple = None
-    output_shape:tuple = None
+    input_shape:Tuple = None
+    output_shape:Tuple = None
     return_sequences:bool = None
 
     # Weights
@@ -169,7 +170,7 @@ found shape={input.shape}")
         Compile layer with the given input shape
         """
         # Configure layer's class input_shape
-        if type(input_shape) is not tuple and type(input_shape) is not list:
+        if type(input_shape) is not Tuple and type(input_shape) is not List:
             # Check input_shape type
             raise TypeError("Unknown input_shape type")
         else:
@@ -188,8 +189,8 @@ found shape={input.shape}")
                         f"Expected ndim=3, found ndim={len(input_shape)+1}")
                 else:
                     # None exist in first dimension of ndim=3
-                    # convert input_shape to tuple
-                    self.input_shape = tuple(input_shape)
+                    # convert input_shape to Tuple
+                    self.input_shape = Tuple(input_shape)
         # Update number of parameters
         self.num_params = 4*(self.num_of_units*(self.input_shape[1] + self.num_of_units + 1))
         # Generate weights
@@ -294,8 +295,8 @@ found shape={input.shape}")
         # Layer info
         self.name = object['name']
         self.algorithm = object['algorithm']
-        self.input_shape = tuple(object['input_shape'])
-        self.output_shape = tuple(object['output_shape'])
+        self.input_shape = Tuple(object['input_shape'])
+        self.output_shape = Tuple(object['output_shape'])
         self.return_sequences = bool(object['return_sequences'])
         self.num_of_units = object['num_of_units']
         self.U_forget = np.array(object['U_forget'])

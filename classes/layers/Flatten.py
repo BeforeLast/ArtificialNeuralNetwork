@@ -1,6 +1,6 @@
 # Guide : https://www.tensorflow.org/api_docs/python/tf/keras/layers/Flatten
 
-from typing import Optional, Union
+from typing import Optional, Union, Tuple, List
 from classes.layers.Layer import Layer as BaseLayer
 import numpy as np
 
@@ -13,8 +13,8 @@ class Flatten(BaseLayer):
     input = None
     output = None
     algorithm:str = None
-    input_shape:tuple = None
-    output_shape:tuple[None, int] = None
+    input_shape:Tuple = None
+    output_shape:Tuple[None, int] = None
     weights:np.ndarray = None 
     deltas_wrt_inputs:np.ndarray = None
     
@@ -41,11 +41,11 @@ class Flatten(BaseLayer):
         if input_shape[0] != None:
             # Only state data dimension and channel
             fix_shape = [None]
-            fix_shape.extend(list(input_shape))
-            self.input_shape = tuple(fix_shape)
+            fix_shape.extend(List(input_shape))
+            self.input_shape = Tuple(fix_shape)
         else:
             # Batch input shape already stated (None)
-            self.input_shape = tuple(input_shape)
+            self.input_shape = Tuple(input_shape)
         self.calculate_output_shape()
             
     def calculate_output_shape(self):
@@ -94,8 +94,8 @@ class Flatten(BaseLayer):
         # Layer info
         self.name = object['name']
         self.algorithm = object['algorithm']
-        self.input_shape = tuple(object['input_shape'])
-        self.output_shape = tuple(object['output_shape'])
+        self.input_shape = Tuple(object['input_shape'])
+        self.output_shape = Tuple(object['output_shape'])
         
 
 if __name__ == "__main__":
