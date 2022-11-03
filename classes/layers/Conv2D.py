@@ -41,6 +41,8 @@ class Conv2D(BaseLayer):
     delta_pools = None
     delta_detectors = None
     
+    num_params:int = None
+    
     def __init__(self, 
             filters, conv_kernel_size,              # Conv configuration
             conv_stride=(1, 1), conv_padding_size=1,# Conv configuration
@@ -373,6 +375,10 @@ of two integers")
             self.input_shape = input_shape
         self.generate_filters()
         self.calculate_output_shape()
+        # Set number of params
+        self.num_params = self.conv_output_shape[-1] * (
+            self.input_shape[-1] * self.conv_kernel_size[0] * self.conv_kernel_size[1] + 1
+        )
 
     # DONE : FIX GENERATE FILTERS
     def generate_filters(self):

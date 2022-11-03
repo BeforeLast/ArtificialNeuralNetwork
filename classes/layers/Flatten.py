@@ -16,6 +16,7 @@ class Flatten(BaseLayer):
     output_shape:tuple = None
     weights:np.ndarray = None 
     deltas_wrt_inputs:np.ndarray = None
+    num_params:int = None
     
     def __init__(self, **kwargs):
         """
@@ -37,6 +38,9 @@ class Flatten(BaseLayer):
         Compile layer to be used by calucating output shape and assigning input
         shape
         """
+        # Set number of params
+        self.num_params = 0
+        
         if input_shape[0] != None:
             # Only state data dimension and channel
             fix_shape = [None]
