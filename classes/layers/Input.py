@@ -1,6 +1,5 @@
 # Guide : https://www.tensorflow.org/api_docs/python/tf/keras/layers/InputLayer
 
-from typing import Optional, Union
 from classes.layers.Layer import Layer as BaseLayer
 from classes.utils.ImageConvert import ImageConvert
 from math import prod
@@ -15,8 +14,8 @@ class InputLayer(BaseLayer):
     input = None
     output = None
     algorithm:str = None
-    input_shape:Union[int, tuple, list] = None
-    output_shape:Union[int, tuple, list] = None
+    input_shape:tuple = None
+    output_shape:tuple = None
     num_params:int = None
     
     def __init__(self, input_shape, **kwargs):

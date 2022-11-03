@@ -1,12 +1,11 @@
 # Guide : https://www.tensorflow.org/api_docs/python/tf/keras/layers/Conv2D
 
-from operator import index
-from classes.layers.Dense import Dense
 from classes.layers.Layer import Layer as BaseLayer
 from classes.misc.Function import conv2d_fpack, misc
 from scipy.signal import fftconvolve
 import numpy as np
 from numpy.lib.stride_tricks import sliding_window_view
+from typing import Tuple, List
 
 class Conv2D(BaseLayer):
     """
@@ -16,16 +15,16 @@ class Conv2D(BaseLayer):
     name:str = None
     input = None
     output:np.ndarray = None
-    input_shape:tuple[None, int, int, int] = None
-    output_shape:tuple[None, int, int, int] = None
+    input_shape:Tuple[None, int, int, int] = None
+    output_shape:Tuple[None, int, int, int] = None
 
     # Convolution info
     num_of_filters:int = None
-    conv_kernel_size:tuple[int, int] = None
+    conv_kernel_size:Tuple[int, int] = None
     conv_padding_size:int = None
-    conv_stride:tuple[int, int] = None
-    conv_filters:list[tuple[list[np.ndarray], float]] = None
-    conv_output_shape:tuple[None, int, int, int] = None
+    conv_stride:Tuple[int, int] = None
+    conv_filters:List[Tuple[List[np.ndarray], float]] = None
+    conv_output_shape:Tuple[None, int, int, int] = None
     conv_output:np.ndarray = None
 
     # Detector info
@@ -33,11 +32,11 @@ class Conv2D(BaseLayer):
     detector_output:np.ndarray = None
 
     # Pooling info
-    pool_kernel_size:tuple[int, int] = None
-    pool_stride:tuple[int, int] = None
+    pool_kernel_size:Tuple[int, int] = None
+    pool_stride:Tuple[int, int] = None
     
     # Deltas
-    deltas_wrt_filters:list[tuple[list[np.ndarray], float]] = None
+    deltas_wrt_filters:List[Tuple[List[np.ndarray], float]] = None
     deltas_wrt_inputs:np.ndarray = None
     delta_pools = None
     delta_detectors = None

@@ -5,7 +5,7 @@ from classes.layers.Dense import Dense
 
 from classes.layers.Layer import Layer
 import numpy as np
-from typing import List
+from typing import List, Dict
 from classes.misc.Class import layerinit_cpack, lossinit_cpack
 from classes.utils.ImageDirectoryIterator import ImageDirectoryIterator
 from classes.losses.Losses import Losses
@@ -28,7 +28,7 @@ class Sequential():
     metrics:Union[List[str], str] = None
 
     # Prediction info
-    predict_history:dict[str, any]= None
+    predict_history:Dict[str, any] = None
 
     ## METHODS
     def __init__(self, layers:List[Layer], **kwargs):

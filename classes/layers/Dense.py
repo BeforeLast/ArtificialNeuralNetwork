@@ -1,6 +1,5 @@
 # Guide : https://www.tensorflow.org/api_docs/python/tf/keras/layers/Dense
 
-from typing import Optional, Union
 from classes.layers.Layer import Layer as BaseLayer
 from classes.misc.Function import dense_fpack, dense_fpack_deriv, dense_epack_deriv
 import numpy as np
@@ -15,8 +14,8 @@ class Dense(BaseLayer):
     output = None
     output_deriv = None
     algorithm:str = None
-    input_shape:tuple[None, int] = None
-    output_shape:tuple[None, int] = None
+    input_shape:tuple = None
+    output_shape:tuple = None
     num_of_units:int = None
     weights:np.ndarray = None
     deltas_wrt_inputs:np.ndarray = None

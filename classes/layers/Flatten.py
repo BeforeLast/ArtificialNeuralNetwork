@@ -1,6 +1,5 @@
 # Guide : https://www.tensorflow.org/api_docs/python/tf/keras/layers/Flatten
 
-from typing import Optional, Union
 from classes.layers.Layer import Layer as BaseLayer
 import numpy as np
 
@@ -14,7 +13,7 @@ class Flatten(BaseLayer):
     output = None
     algorithm:str = None
     input_shape:tuple = None
-    output_shape:tuple[None, int] = None
+    output_shape:tuple = None
     weights:np.ndarray = None 
     deltas_wrt_inputs:np.ndarray = None
     
