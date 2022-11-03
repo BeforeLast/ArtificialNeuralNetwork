@@ -53,6 +53,14 @@ class Layer(ABC):
         """
         pass
     
+    @property
+    @abstractmethod
+    def num_params(self):
+        """
+        Details for layer's output shape
+        """
+        pass
+    
 
     ## METHODS
     @classmethod
