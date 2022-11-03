@@ -2,7 +2,7 @@ import json
 from typing import Type, Union
 from tabulate import tabulate
 from classes.layers.Dense import Dense
-
+from typing import Union, Tuple, List
 from classes.layers.Layer import Layer
 import numpy as np
 from typing import List
