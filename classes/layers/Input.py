@@ -1,7 +1,6 @@
 # Guide : https://www.tensorflow.org/api_docs/python/tf/keras/layers/InputLayer
 
-from classes.layers.Layer import Layer as BaseLayer
-from classes.utils.ImageConvert import ImageConvert
+from classes.layers.Layer import Layer as BaseLayer  
 import numpy as np
 
 class InputLayer(BaseLayer):

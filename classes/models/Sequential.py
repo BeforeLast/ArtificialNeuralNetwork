@@ -1,5 +1,5 @@
 import json
-from typing import Type, Union
+from typing import Union
 from tabulate import tabulate
 from classes.layers.Dense import Dense
 
@@ -80,9 +80,9 @@ class Sequential():
         for i in range(epochs):
             print(f"Epochs {i+1}/{epochs}")
             batch_index = 0
-            print(f"Step: 0/{len(data)}",end='\r')
-            batch_iter = 1
+            batch_iter = 0
             batch_steps = len(data)//batch_size
+            print(f"Step: 0/{batch_steps}",end='\r')
             while batch_index < len(data):
                 batch_input = data[batch_index:min(batch_index + batch_size, len(data))]
                 batch_label = label[batch_index:min(batch_index + batch_size, len(label))]
@@ -115,8 +115,9 @@ class Sequential():
                 batch_index += batch_size
                 batch_iter += 1
                 # Print process
+                
                 print(f"Step: {batch_iter}/{batch_steps}",
-                    end='\n' if batch_index == batch_steps else '\r')
+                    end='\n' if batch_iter >= batch_steps else '\r')
 
 
     def predict(self, data, target=None):
@@ -141,7 +142,7 @@ class Sequential():
                 step = next(data)
                 counter += 1
                 # Print step
-                print(f"Step: {counter}/{data_len}", end=' | ' if counter==data_len else '\r')
+                print(f"Step: {counter}/{data_len}", end=' | ' if counter>=data_len else '\r')
             # Reshape predictions and targets shape
             results = np.array(results).reshape(-1,1)
             true_labels = np.array(true_labels).reshape(-1,1)
